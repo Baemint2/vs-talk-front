@@ -1,46 +1,38 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs.tsx"
-import { useState } from "react";
-import YouTube, {type YouTubeProps } from 'react-youtube';
-import Vote from "../components/vote/Vote.tsx"
+import logo from '../assets/logo2.png'
+import Post from "@/components/post/Post.tsx";
+import {useState} from "react";
+import {Search} from "lucide-react";
+
+interface Post {
+    id: number;
+    title: string;
+    author: string;
+    timestamp: string;
+    thumbnailUrl?: string;
+}
 
 // Home.tsx
 const Home = () => {
-    const [videoId] = useState<string>('');
-
-    const onPlayerReady: YouTubeProps['onReady'] = (event) => {
-        event.target.pauseVideo();
-    }
-    const opts: YouTubeProps['opts'] = {
-        height: '390',
-        width: '640',
-        playerVars: {
-            autoplay: 1,
-        },
-    };
-
+    const [posts, setPosts] = useState<Post[]>([]);
     return <>
-        <Tabs defaultValue="account" className="p-1 rounded-lg">
-            <TabsList>
-                <TabsTrigger value="account" className="bg-blue-500 text-white hover:bg-blue-600">
-                    스포츠
-                </TabsTrigger>
-                <TabsTrigger value="password" className="bg-green-500 text-white hover:bg-green-600">
-                    주류
-                </TabsTrigger>
-            </TabsList>
-            <TabsContent value="account">Make changes to your account here.</TabsContent>
-            <TabsContent value="password">Change your password here.</TabsContent>
-        </Tabs>
-    <div className={"flex flex-col items-center gap-4"} style={{height: '100vh'}}>
-        { videoId === null ? null :
-            (<YouTube
-                videoId={videoId}
-                opts={opts}
-                onReady={onPlayerReady}
-                className="flex justify-center"/>)
-        }
-        <Vote />
-    </div>
+        <div className="flex flex-col items-center gap-4">
+            <div className={"flex flex-col items-center gap-4 mt-10"}>
+                <img src={logo} alt="logo" className="w-16 h-16 mt-2 ml-2 rounded-xl"/>
+            </div>
+            <div className="flex items-center justify-center w-8/12 mt-5 bg-amber-100 rounded-2xl">
+                <input
+                    className="flex-1 h-8 px-4 py-2 bg-transparent outline-none rounded-2xl"
+                    placeholder="Search"
+                />
+                <button
+                    className="pr-3 hover:bg-amber-200 p-2 rounded-r-2xl transition-colors"
+                    type="button"
+                >
+                    <Search size={16} className="text-gray-600"/>
+                </button>
+            </div>
+        </div>
+        <Post id={1}/>
     </>
 };
 

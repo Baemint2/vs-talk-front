@@ -12,9 +12,7 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-
-    width: 100%;
-    height: 100%;
+    width: 100vw;
 }
 
 a {
@@ -33,6 +31,19 @@ button:not([data-slot="tabs-trigger"]):hover {
 button:not([data-slot="tabs-trigger"]):focus,
 button:not([data-slot="tabs-trigger"]):focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
+}
+
+.full {
+    min-height: 100dvh;
+}
+
+.login {
+    min-height: auto;
+    height: 500px;
+    padding-top: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 @media (prefers-color-scheme: light) {
