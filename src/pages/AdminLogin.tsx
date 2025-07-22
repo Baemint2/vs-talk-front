@@ -1,4 +1,5 @@
 import {useState} from "react";
+import axios from "axios";
 
 const AdminLogin = () => {
 
@@ -6,22 +7,19 @@ const AdminLogin = () => {
     const [password, setPassword] = useState<string>("")
 
     const handleLogin = async () => {
-        const data = new URLSearchParams({
+        const data = {
             username: username,
             password: password,
+        };
+
+        const response = await axios.post("/api/v1/login", data, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
         });
 
-        const response = await fetch("http://localhost:8090/login", {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            method: "post",
-            body: data,
-            credentials: 'same-origin'
-        });
-        window.location.href = response.url
-        // const test = await response.json();
-        // console.log(test)
+        const test = await response.data;
+        console.log(test)
     };
 
     return (
@@ -35,7 +33,7 @@ const AdminLogin = () => {
                         className="border-2 border-solid border-gray-300"
                         name="username"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)} // ✅ 입력값 변경 시 상태 업데이트
+                        onChange={(e) => setUsername(e.target.value)}
                     />
                     <label>비밀번호</label>
                     <input

@@ -1,37 +1,38 @@
 // src/App.tsx
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import {createBrowserRouter, RouterProvider} from 'react-router-dom';
 import Home from '@/pages/Home';
 import PostDetail from '@/pages/PostDetail.tsx';
 import MainLayout from '@/layouts/MainLayout';
 import Login from './pages/Login';
 import AdminLogin from "@/pages/AdminLogin.tsx";
 import Admin from './pages/Admin';
+import {UserProvider} from "@/components/UserContext.tsx";
 
 // v7에서는 createBrowserRouter를 사용합니다
 const router = createBrowserRouter([
     {
         path: '/',
-        element: <MainLayout />,
+        element: <MainLayout/>,
         children: [
             {
                 index: true,
-                element: <Home />
+                element: <Home/>
             },
             {
                 path: 'post/:id',
-                element: <PostDetail />
+                element: <PostDetail/>
             },
             {
                 path: '/post/add',
-                element: <Admin />
+                element: <Admin/>
             },
             {
                 path: 'login',
-                element: <Login />
+                element: <Login/>
             },
             {
                 path: 'login/admin',
-                element: <AdminLogin />
+                element: <AdminLogin/>
             }
             // 다른 라우트들...
         ]
@@ -39,7 +40,9 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-    return <RouterProvider router={router} />;
+    return <UserProvider>
+                <RouterProvider router={router}/>
+           </UserProvider>;
 }
 
 export default App;
