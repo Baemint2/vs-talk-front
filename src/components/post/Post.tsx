@@ -1,15 +1,9 @@
 import {useNavigate} from "react-router-dom";
 
-// Props 인터페이스 정의
-interface PostProps {
-    id: number;
-    // 다른 필요한 props들 추가
-    title?: string;
-    author?: string;
-    timestamp?: string;
-}
+import type {PostProps} from "@/props/PostProps.tsx";
 
-const Post = ({ id, title, author, timestamp }: PostProps) => {
+
+const Post = ({ id, title, author, updatedAt }: PostProps) => {
     const navigate = useNavigate();
 
     const handlePostClick = () => {
@@ -23,10 +17,10 @@ const Post = ({ id, title, author, timestamp }: PostProps) => {
                 <span className="flex flex-row items-center justify-center w-20">썸네일</span>
             </div>
             <div className="flex flex-col flex-1 justify-between">
-                <span className="font-medium mb-5">제목</span>
+                <span className="font-medium mb-5">{title}</span>
                 <div className="flex justify-between space-x-2">
-                    <span className="text-sm">작성자</span>
-                    <span className="text-sm">시간</span>
+                    <span className="text-sm">{author}</span>
+                    <span className="text-sm">{updatedAt}</span>
                 </div>
             </div>
         </div>

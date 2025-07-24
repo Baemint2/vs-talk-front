@@ -20,7 +20,7 @@ const MainLayout = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column'}}>
             <Header onMenuClick={toggleSidebar}  />
-            <main className={isLoginPage ? 'login' : 'full'}>
+            <main className={`${isLoginPage ? 'login' : 'full'} flex-1 pb-30`}>
             <Outlet /> {/* 라우팅되는 페이지가 여기에 들어감 */}
             </main>
             <Footer/>

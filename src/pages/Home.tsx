@@ -1,19 +1,28 @@
 import logo from '../assets/logo2.png'
 import Post from "@/components/post/Post.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Search} from "lucide-react";
-
-interface Post {
-    id: number;
-    title: string;
-    author: string;
-    timestamp: string;
-    thumbnailUrl?: string;
-}
+import api from "@/api/axiosConfig.ts";
+import type {PostProps} from "@/props/PostProps.tsx";
 
 // Home.tsx
 const Home = () => {
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [posts, setPosts] = useState<PostProps[]>([]);
+
+    useEffect(() => {
+        const fetchPostList = async () => {
+            try {
+                const response = await api.get(`/api/post/get`);
+                console.log(response.data);
+                setPosts(response.data);
+                // 상태 업데이트 등 필요한 작업 수행
+            } catch (error) {
+                console.error('게시글 목록 가져오기 실패:', error);
+            }
+        };
+        fetchPostList();
+    }, [])
+
     return <>
         <div className="flex flex-col items-center gap-4">
             <div className={"flex flex-col items-center gap-4 mt-10"}>
@@ -32,7 +41,13 @@ const Home = () => {
                 </button>
             </div>
         </div>
-        <Post id={1}/>
+        {posts.map(post => (
+                <Post id={post.id}
+                      key={post.id}
+                      title={post.title}
+                      author={post.author}
+                      updatedAt={post.updatedAt}
+                />))}
     </>
 };
 
