@@ -1,8 +1,26 @@
-// api/axiosConfig.ts (새 파일 생성)
 import axios from 'axios';
 
+const getBaseURL = () => {
+    // Vite 환경변수 사용
+    const envURL = import.meta.env.VITE_API_BASE_URL;
+
+    if (envURL) {
+        return envURL;
+    }
+
+    if (import.meta.env.DEV) {
+        const hostname = window.location.hostname;
+        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+            return `http://${hostname}:8080`;
+        }
+    }
+
+    return 'http://localhost:8080';
+};
+
+
 const api = axios.create({
-    baseURL: 'http://localhost:8080', // 백엔드 서버 주소
+    baseURL: getBaseURL(), // 백엔드 서버 주소
     withCredentials: true, // 쿠키를 자동으로 포함
 });
 

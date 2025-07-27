@@ -6,7 +6,12 @@ interface Category {
     name: string;
 }
 
-const CategoryList = () => {
+interface CategoryProps {
+    value?: number;
+    onChange: (categoryId: number) => void;
+}
+
+const CategoryList = ({value, onChange}: CategoryProps) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -28,13 +33,24 @@ const CategoryList = () => {
         fetchCategories();
     }, []);
 
+    const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const categoryId = parseInt(event.target.value);
+        if (categoryId) {
+            onChange(categoryId);
+        }
+    };
+
+
     if (loading) return <div>로딩 중...</div>;
     if (error) return <div>에러: {error}</div>;
 
     return (
         <div>
-            <select className="your-existing-classes">
-                <option value="">카테고리 선택</option>
+            <select
+                value={value || ''}
+                onChange={handleCategoryChange}
+            >
+            <option value="">카테고리 선택</option>
                 {loading && <option disabled>로딩 중...</option>}
                 {error && <option disabled>에러 발생</option>}
                 {categories.map(category => (

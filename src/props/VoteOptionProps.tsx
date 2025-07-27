@@ -1,5 +1,5 @@
 export interface VoteOption {
-    id: string;
+    id: number;
     optionText: string;
     color?: string;
     votes: number;

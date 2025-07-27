@@ -13,10 +13,10 @@ import CategoryList from "@/api/category/CategoryList.tsx";
 import Vote from "@/components/vote/Vote.tsx";
 import api from "@/api/axiosConfig.ts";
 import {useUser} from "@/components/UserContext.tsx";
-import type {VoteOption} from "@/props/VoteOptionProps.tsx"; // 위에서 만든 axios 설정
+import type {VoteOption} from "@/props/VoteOptionProps.tsx";
 
 interface VoteData {
-    id: string;
+    id: number;
     title: string;
     createdAt: Date;
     options: VoteOption[];
@@ -29,7 +29,9 @@ const Admin = () => {
     const [videoId, setVideoId] = useState<string>('');
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState('');
+    const [title, setTitle] = useState('');
     const [votes, setVotes] = useState<VoteData[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
     const onPlayerReady: YouTubeProps['onReady'] = (event) => {
         event.target.pauseVideo();
@@ -64,43 +66,31 @@ const Admin = () => {
         setShowInput(true);
     }
 
-
     // 투표 추가
     const createVote = () => {
         const newVote: VoteData = {
-            id: Date.now().toString(),
+            id: Date.now().toString() as unknown as number,
             title: '123',
             createdAt: new Date(),
             options: [
-                { id: '1', optionText: '옵션 1', votes: 0 },
-                { id: '2', optionText: '옵션 2', votes: 0 }
+                { id: 1, optionText: '옵션 1', votes: 0 },
+                { id: 2, optionText: '옵션 2', votes: 0 }
             ],
         };
         setVotes([...votes, newVote]);
         console.log('새 투표 생성:', newVote.id);
     }
 
-    // 투표 삭제
-    const deleteVote = (voteId: string) => {
-        setVotes(votes.filter(vote => vote.id !== voteId));
-        console.log('투표 삭제:', voteId);
-    }
-
-    const updateVote = (voteId: string, updatedVote: Partial<VoteData>) => {
-        setVotes(votes.map(vote =>
-            vote.id === voteId ? { ...vote, ...updatedVote } : vote
-        ));
-        console.log('투표 업데이트:', voteId, updatedVote);
-    }
-
-
+    const handleCategoryChange = (categoryId: number) => {
+        setSelectedCategoryId(categoryId);
+    };
 
     const addPost = async () => {
         console.log('게시글을 등록합니다.')
         const postCreate = {
-            title: 'test',
-            categoryName : '스포츠',
-            videoId : '123',
+            title: title,
+            categoryId : selectedCategoryId,
+            videoId : videoId,
             isSecret: false,
             isDeleted: false,
             voteEnabled: true,
@@ -118,7 +108,7 @@ const Admin = () => {
 
     return <>
         <div className={"flex flex-col items-center gap-4 mt-10"}>
-            <Input />
+            <Input onChange={(e) => setTitle(e.target.value)}/>
             {showInput ?
                 (<form onSubmit={addVideoId}>
                     <Dialog open={open} onOpenChange={setOpen}>
@@ -179,19 +169,19 @@ const Admin = () => {
                     {votes.map((vote) => (
                         <Vote
                             key={vote.id}
-                            voteId={vote.id}
-                            title={vote.title}
                             options={vote.options}
                             isEditing={true}
-                            onDelete={deleteVote}
-                            onUpdate={updateVote}
+                            onVote={() => {}}
                         />
                     ))}
                 </div>
             )}
 
             <div>
-                <CategoryList/>
+                <CategoryList
+                    value={selectedCategoryId || undefined}
+                    onChange={handleCategoryChange}
+                />
             </div>
             <div className={"border border-solid border-gray-300 bg-gray-300 mt-5"}>
                 <Button onClick={() => addPost()}> 게시글 등록하기 </Button>

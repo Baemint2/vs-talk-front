@@ -22,16 +22,14 @@ interface PostDetailData {
 
 const PostDetail = () => {
     const { id } = useParams<{ id: string }>();
-    const [videoId] = useState<string>('');
     const navigate = useNavigate();
     const [post, setPost] = useState<PostDetailData | null>(null);
     const [posts, setPosts] = useState<PostProps[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-
     useEffect(() => {
-        const fetchPostDetail = async () => {
+        const fetchData = async () => {
             if (!id) {
                 setError('게시글 ID가 없습니다.');
                 setLoading(false);
@@ -39,43 +37,37 @@ const PostDetail = () => {
             }
 
             try {
-                const response = await api.get(`/api/post/get/${id}`);
-                setPost(response.data);
+                // 1. 게시글 상세 정보 가져오기
+                const postResponse = await api.get(`/api/post/get/${id}`);
+                console.log(postResponse.data);
+                setPost(postResponse.data);
+
+                // 2. 게시글 목록 가져오기 및 현재 게시글 제외
+                const postsResponse = await api.get(`/api/post/get`);
+                const filteredPosts = postsResponse.data.filter((postItem: { id: number; }) => postItem.id !== Number(id));
+                console.log(filteredPosts);
+                setPosts(filteredPosts);
+
             } catch (error) {
-                console.error('게시글 상세 정보 가져오기 실패:', error);
-                setError('게시글을 불러올 수 없습니다.');
+                console.error('데이터 가져오기 실패:', error);
+                setError('데이터를 불러올 수 없습니다.');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchPostDetail();
-    }, [id]); // id가 변경될 때마다 다시 실행
-
-    useEffect(() => {
-        const fetchPostList = async () => {
-            try {
-                const response = await api.get(`/api/post/get`);
-                console.log(response.data);
-                setPosts(response.data);
-                // 상태 업데이트 등 필요한 작업 수행
-            } catch (error) {
-                console.error('게시글 목록 가져오기 실패:', error);
-            }
-        };
-        fetchPostList();
-    }, [])
-
+        fetchData();
+    }, [id]);
 
     const onPlayerReady: YouTubeProps['onReady'] = (event) => {
         event.target.pauseVideo();
     }
     const opts: YouTubeProps['opts'] = {
-        height: '390',
-        width: '640',
-        playerVars: {
-            autoplay: 1,
-        },
+        width: '100%',
+        height: '250',
+        // playerVars: {
+        //     autoplay: 1,
+        // },
     };
 
     if (loading) {
@@ -100,19 +92,41 @@ const PostDetail = () => {
         return <div>게시글을 찾을 수 없습니다.</div>;
     }
 
+    const handleVote = async (optionId: number | string) => {
+        if (!post) return;
+
+        try {
+            // 서버에 투표 요청
+            await api.post(`/api/vote/add`, {
+                optionId: optionId,
+                postId: post.id,
+                userId: id,
+            });
+
+
+        } catch (error) {
+            console.error('투표 실패:', error);
+            // 에러 처리 (토스트 메시지 등)
+        }
+    };
 
     return <>
         <div className="pb-20 mt-10">
             <div className={"flex flex-col items-center gap-4"}>
-                <div>제목</div>
-                {videoId === '' ? (<div></div>) :
-                    (<YouTube
-                        videoId={videoId}
+                <div>{post.title}</div>
+                {post.videoId === '' ? (<div></div>) :
+                    (
+                        <YouTube
+                        videoId={post.videoId}
                         opts={opts}
                         onReady={onPlayerReady}
                         className="flex justify-center"/>)
                 }
-                <Vote voteId="1" title="123" options={post.voteOptionList || []} isEditing={false} onDelete={() => {}} onUpdate={() => {}}/>
+                <Vote options={post.voteOptionList || []}
+                      postId={post.id}
+                      isEditing={false}
+                      onVote={handleVote}
+                />
                 <Comment/>
             </div>
             <div className={"border-t"}>
