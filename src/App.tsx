@@ -8,7 +8,6 @@ import AdminLogin from "@/pages/AdminLogin.tsx";
 import Admin from './pages/Admin';
 import {UserProvider} from "@/components/UserContext.tsx";
 
-// v7에서는 createBrowserRouter를 사용합니다
 const router = createBrowserRouter([
     {
         path: '/',
@@ -41,8 +40,8 @@ const router = createBrowserRouter([
 
 function App() {
     return <UserProvider>
-                <RouterProvider router={router}/>
-           </UserProvider>;
+            <RouterProvider router={router}/>
+          </UserProvider>;
 }
 
 export default App;

@@ -1,8 +1,9 @@
-import {Link, useNavigate} from "react-router-dom";
-import {X, User, Settings, LogOut, Home} from 'lucide-react';
+import {Link} from "react-router-dom";
+import {User, Settings, LogOut} from 'lucide-react';
 import {useEffect, useState} from "react";
 import {useUser} from "@/components/UserContext.tsx";
 import {useAuth} from "@/hooks/useAuth.tsx";
+import api from "@/api/axiosConfig.ts";
 
 interface IUserInfo {
     profile?: string;
@@ -16,7 +17,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({isOpen, onClose}: SidebarProps) => {
-    const [userInfo, setUserInfo] = useState<IUserInfo | null>(null);
+    const [, setUserInfo] = useState<IUserInfo | null>(null);
     const {setUser} = useUser();
     const {isAuthenticated, logout} = useAuth();
 
@@ -30,17 +31,10 @@ const Sidebar = ({isOpen, onClose}: SidebarProps) => {
 
     const getUserInfo = async () => {
         try {
-            const response = await fetch("/api/v1/userInfo", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await api.get("/api/v1/userInfo");
 
-            if (!response.ok) throw new Error("사용자 정보를 가져오지 못했습니다.");
-            const data = await response.json();
-            setUser(data);
-            setUserInfo(data); // 사용자 정보 설정
+            setUser(response.data);
+            setUserInfo(response.data);
         } catch (error) {
             console.error("사용자 정보 가져오기 오류:", error);
         }

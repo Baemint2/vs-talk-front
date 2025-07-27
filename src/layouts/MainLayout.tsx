@@ -3,6 +3,7 @@ import Footer from '../components/Footer.js';
 import {Outlet, useLocation} from 'react-router-dom';
 import Sidebar from "../components/Sidebar.tsx";
 import {useState} from "react";
+import ScrollToTop from '@/components/ScrollToTop.ts';
 
 const MainLayout = () => {
     const location = useLocation();
@@ -18,13 +19,14 @@ const MainLayout = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column'}}>
-            <Header onMenuClick={toggleSidebar}  />
+        <div style={{display: 'flex', flexDirection: 'column'}}>
+            <Header/>
             <main className={`${isLoginPage ? 'login' : 'full'} flex-1 pb-30`}>
-            <Outlet /> {/* 라우팅되는 페이지가 여기에 들어감 */}
+                <ScrollToTop/>
+                <Outlet/> {/* 라우팅되는 페이지가 여기에 들어감 */}
             </main>
-            <Footer/>
-            <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+            <Footer onMenuClick={toggleSidebar}/>
+            <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar}/>
         </div>
     );
 };
