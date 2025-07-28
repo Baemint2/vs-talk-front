@@ -1,10 +1,4 @@
-import axios from 'axios';
-import { useState, useEffect } from 'react';
-
-interface Category {
-    id: number;
-    name: string;
-}
+import {useCategories} from "@/hooks/useCategories.tsx";
 
 interface CategoryProps {
     value?: number;
@@ -12,26 +6,8 @@ interface CategoryProps {
 }
 
 const CategoryList = ({value, onChange}: CategoryProps) => {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                setLoading(true);
-                const response = await axios.get<Category[]>('/api/category/all');
-                setCategories(response.data);
-            } catch (err) {
-                setError('카테고리를 불러오는데 실패했습니다.');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCategories();
-    }, []);
+    const { categories, loading, error } = useCategories();
 
     const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const categoryId = parseInt(event.target.value);

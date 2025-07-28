@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import AdminLogin from "@/pages/AdminLogin.tsx";
 import Admin from './pages/Admin';
 import {UserProvider} from "@/components/UserContext.tsx";
+import CategoryManage from "@/pages/CategoryManage";
 
 const router = createBrowserRouter([
     {
@@ -16,6 +17,14 @@ const router = createBrowserRouter([
             {
                 index: true,
                 element: <Home/>
+            },
+            {
+                path: 'category/:slug',
+                element: <Home/>
+            },
+            {
+                path: 'category/manage',
+                element: <CategoryManage />
             },
             {
                 path: 'post/:id',
