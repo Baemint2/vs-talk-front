@@ -1,15 +1,33 @@
 // hooks/useAuth.ts
 import { useState, useEffect } from 'react';
 import {useNavigate} from "react-router-dom";
+import {useUser} from "@/components/UserContext.tsx";
+import api from "@/api/axiosConfig.ts";
+
+interface IUserInfo {
+    profile?: string;
+    username: string;
+    email: string;
+}
 
 export const useAuth = () => {
+    const [userInfo, setUserInfo] = useState<IUserInfo | null>(null);
+    const {setUser} = useUser();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [userReady, setUserReady] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         checkAuthStatus();
     }, []);
+
+    useEffect(() => {
+        console.log("로그인 상태 변경됨:", isAuthenticated);
+        if (isAuthenticated) {
+            getUserInfo();
+        }
+    }, [isAuthenticated]);
 
     const checkAuthStatus = async () => {
         try {
@@ -21,6 +39,19 @@ export const useAuth = () => {
             setIsAuthenticated(false);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getUserInfo = async () => {
+        try {
+            const response = await api.get("/api/v1/userInfo");
+
+            setUser(response.data);
+            setUserInfo(response.data);
+            setUserReady(true); // 사용자 정보 로드 완료
+        } catch (error) {
+            console.error("사용자 정보 가져오기 오류:", error);
+            setUserReady(false);
         }
     };
 
@@ -40,5 +71,5 @@ export const useAuth = () => {
         }
     }
 
-    return { isAuthenticated, loading, checkAuthStatus, logout };
+    return { isAuthenticated, loading, userReady, checkAuthStatus, logout, userInfo };
 };

@@ -1,8 +1,8 @@
-import {useEffect, useRef, useState} from 'react';
-import {Button} from "@/components/ui/button.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {X, Plus} from 'lucide-react';
-import type {VoteOption} from "@/props/VoteOptionProps.tsx";
+import { useEffect, useRef, useState } from 'react';
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { X, Plus, Edit } from 'lucide-react';
+import type { VoteOption } from "@/props/VoteOptionProps.tsx";
 import api from "@/api/axiosConfig.ts";
 
 interface VoteProps {
@@ -10,99 +10,90 @@ interface VoteProps {
     isEditing?: boolean;
     postId?: number;
     onVote?: (optionId: number | string) => void;
+    onUpdateOption?: (voteIndex: number, optionId: number, newText: string) => void; // ✅ 추가
+    voteIndex: number;
 }
-
 
 interface VoteCount {
     voteOptionId: number;
     count: number;
 }
 
-const Vote = ({options: initialOptions, postId, onVote, isEditing = false}: VoteProps) => {
+const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUpdateOption, voteIndex }: VoteProps) => {
     const [voteOptions, setVoteOptions] = useState<VoteOption[]>(initialOptions);
     const [voteCount, setVoteCount] = useState<VoteCount[]>([]);
     const [newOptionText, setNewOptionText] = useState('');
     const [isVoted, setIsVoted] = useState(false);
-    const didFetch = useRef(false)
+    const didFetch = useRef(false);
 
     useEffect(() => {
-        console.log('initialOptions', initialOptions)
+        setVoteOptions(initialOptions);
     }, [initialOptions]);
-
-
-    // 옵션 업데이트
-    const updateOptions = (newOptions: VoteOption[]) => {
-        setVoteOptions(newOptions);
-    };
 
     const fetchVoteCount = async () => {
         try {
             const response = await api.get(`/api/vote/count/${postId || ''}`);
-            console.log(response.data);
             setVoteCount(response.data);
-
         } catch (error) {
             console.error('투표 카운트 가져오기 실패:', error);
         }
-    }
+    };
+
     const fetchIsVoted = async () => {
-        if (didFetch.current) return
-        didFetch.current = true
+        if (didFetch.current) return;
+        didFetch.current = true;
         try {
             const response = await api.get(`/api/vote/${postId || ''}/status`);
-            console.log(response.data);
             setIsVoted(response.data);
         } catch (error) {
-            console.error("투표 여부 확인 실패:", error)
+            console.error("투표 여부 확인 실패:", error);
         }
-    }
+    };
 
-    // 투표 수 조회
     useEffect(() => {
-        fetchVoteCount();
-        fetchIsVoted();
+        if (postId) {
+            fetchVoteCount();
+            fetchIsVoted();
+        }
     }, [postId]);
 
+    const updateOptions = (newOptions: VoteOption[]) => {
+        setVoteOptions(newOptions);
+    };
 
-    // 투표 옵션 추가
+    // ✅ 옵션 텍스트 수정
+    const updateOptionText = (optionId: number, newText: string) => {
+        setVoteOptions(prev => prev.map(opt =>
+            opt.id === optionId ? { ...opt, optionText: newText } : opt
+        ));
+        onUpdateOption?.(voteIndex, optionId, newText);
+    };
+
     const addOption = () => {
         if (newOptionText.trim()) {
             const newOption: VoteOption = {
-                id: Date.now() + 1, // 임시 ID (음수나 큰 숫자로 구분)
+                id: Date.now() + 1,
                 optionText: newOptionText,
                 color: '#FBBF24',
                 votes: 0,
             };
-            const updatedOptions = [...voteOptions, newOption];
-            updateOptions(updatedOptions);
+            const updated = [...voteOptions, newOption];
+            updateOptions(updated);
             setNewOptionText('');
         }
     };
 
-    // // 투표 옵션 삭제
-    // const removeOption = (optionId: string) => {
-    //     if (voteOptions.length > 2) { // 최소 2개 옵션 유지
-    //         const updatedOptions = voteOptions.filter(option => option.id !== optionId);
-    //         updateOptions(updatedOptions);
-    //     }
-    // };
-    //
-    // // 투표 옵션 텍스트 수정
-    // const updateOptionText = (optionId: string, newText: string) => {
-    //     setVoteOptions(voteOptions.map(option =>
-    //         option.id === optionId ? { ...option, text: newText } : option
-    //     ));
-    // };
+    const removeOption = (optionId: number) => {
+        if (voteOptions.length > 2) {
+            const updated = voteOptions.filter(opt => opt.id !== optionId);
+            updateOptions(updated);
+        }
+    };
 
-    // 투표 처리 함수
     const handleVote = async (optionId: number | string) => {
         try {
-            // 부모 컴포넌트의 onVote 콜백 호출 (투표 API 호출)
             await onVote?.(optionId);
-
-            // 투표 성공 후 투표 수 다시 조회
             await fetchVoteCount();
-
         } catch (error) {
             console.error('투표 처리 실패:', error);
         }
@@ -110,15 +101,14 @@ const Vote = ({options: initialOptions, postId, onVote, isEditing = false}: Vote
 
     return (
         <div className="flex flex-col bg-gray-50 rounded-2xl w-10/12 mt-10 p-4 relative">
+            {!isEditing && (
+                <div className="flex text-left justify-end mb-5 mt-5">
+                    <span className="mr-5 text-sm text-gray-600">
+                        {voteCount.reduce((c, o) => c + o.count, 0)}명 투표
+                    </span>
+                </div>
+            )}
 
-            {/* 투표 제목 */}
-            <div className="flex text-left justify-end mb-5 mt-5">
-                <span className="mr-5 text-sm text-gray-600">
-                    {voteCount.reduce((count, option) => count + option.count, 0)}명 투표
-                </span>
-            </div>
-
-            {/* 투표 옵션들 */}
             <div className="flex flex-col items-center text-left">
                 {voteOptions.map((option, index) => (
                     <VoteOption
@@ -126,8 +116,8 @@ const Vote = ({options: initialOptions, postId, onVote, isEditing = false}: Vote
                         option={option}
                         index={index}
                         isEditing={isEditing}
-                        // onUpdate={updateOptionText}
-                        // onRemove={removeOption}
+                        onUpdate={updateOptionText}
+                        onRemove={removeOption}
                         isVoted={isVoted}
                         onVote={handleVote}
                         voteCount={voteCount}
@@ -135,24 +125,15 @@ const Vote = ({options: initialOptions, postId, onVote, isEditing = false}: Vote
                     />
                 ))}
 
-                {/* 새 옵션 추가 */}
                 {isEditing && (
                     <div className="flex items-center gap-2 mt-3 w-full max-w-md">
                         <Input
                             placeholder="새 옵션을 입력하세요"
                             value={newOptionText}
                             onChange={(e) => setNewOptionText(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    addOption();
-                                }
-                            }}
+                            onKeyDown={(e) => e.key === 'Enter' && addOption()}
                         />
-                        <Button
-                            onClick={addOption}
-                            size="sm"
-                            disabled={!newOptionText.trim()}
-                        >
+                        <Button onClick={addOption} size="sm" disabled={!newOptionText.trim()}>
                             <Plus size={16}/>
                         </Button>
                     </div>
@@ -162,87 +143,87 @@ const Vote = ({options: initialOptions, postId, onVote, isEditing = false}: Vote
     );
 };
 
-// 개별 투표 옵션 컴포넌트
 interface VoteOptionProps {
     option: VoteOption;
     index: number;
     isEditing?: boolean;
-    // onUpdate: (optionId: number, newText: string) => void;
-    // onRemove: (optionId: number) => void;
+    onUpdate: (optionId: number, newText: string) => void;
+    onRemove: (optionId: number) => void;
     onVote?: (optionId: number | string) => void;
     voteCount?: VoteCount[];
     isVoted?: boolean;
     canRemove: boolean;
 }
 
-const VoteOption = ({option, index, isEditing, isVoted, voteCount, onVote, canRemove}: VoteOptionProps) => {
+const VoteOption = ({ option, index, isEditing, isVoted, voteCount, onUpdate, onRemove, onVote, canRemove }: VoteOptionProps) => {
     const [isEditingText, setIsEditingText] = useState(false);
     const [editText, setEditText] = useState(option.optionText);
 
+    useEffect(() => {
+        setEditText(option.optionText);
+    }, [option.optionText]);
+
     const handleSave = () => {
+        if (editText.trim() && editText !== option.optionText) {
+            onUpdate(option.id, editText.trim());
+        }
         setIsEditingText(false);
     };
 
-    function handleVote(optionId: number | string) {
-        onVote?.(optionId);
-    }
+    const handleCancel = () => {
+        setEditText(option.optionText);
+        setIsEditingText(false);
+    };
 
-    const myVoteCount = voteCount?.find(vote => vote.voteOptionId === option.id)?.count || 0;
-    const totalVotes = voteCount?.reduce((sum, vote) => sum + vote.count, 0) || 0;
+    const myVoteCount = voteCount?.find(v => v.voteOptionId === option.id)?.count || 0;
+    const totalVotes = voteCount?.reduce((s, v) => s + v.count, 0) || 0;
     const votePercentage = totalVotes > 0 ? (myVoteCount / totalVotes) * 100 : 0;
 
     return (
         <div className="flex items-center bg-amber-50 rounded-2xl w-full max-w-md mb-3 p-2 relative group">
             {isEditing && isEditingText ? (
-                <Input
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    onBlur={handleSave}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            handleSave();
-                        } else if (e.key === 'Escape') {
-                            setEditText(option.optionText);
-                            setIsEditingText(false);
-                        }
-                    }}
-                    className="flex-1"
-                    autoFocus
-                />
-            ) : (
-                isVoted ? (
-                    <div className="flex-1 w-full relative">
-                        <div
-                            className="bg-gray-200 rounded-2xl h-10 relative overflow-hidden transition-all duration-300"
-                            style={{width: `${votePercentage}%`}}
-                        >
-                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-black text-xs font-medium">
-                                  ({votePercentage.toFixed(1)}%)
-                             </span>
-                        </div>
-                        <div
-                            className="absolute top-0 left-0 w-full h-10 flex items-center justify-between px-3 text-sm font-medium text-gray-800 cursor-pointer hover:bg-amber-100/20 rounded-2xl"
-                            onClick={() => handleVote(option.id)}
-                        >
-                            <span>{option.optionText}</span>
-                        </div>
+                <div className="flex-1 flex items-center gap-2">
+                    <Input value={editText} onChange={(e) => setEditText(e.target.value)}
+                           onKeyDown={(e) => e.key === 'Enter' ? handleSave() : e.key === 'Escape' && handleCancel()}
+                           className="flex-1" autoFocus />
+                    <Button size="sm" onClick={handleSave} className="px-2 py-1 h-8">저장</Button>
+                    <Button size="sm" variant="outline" onClick={handleCancel} className="px-2 py-1 h-8">취소</Button>
+                </div>
+            ) : isVoted ? (
+                <div className="flex-1 w-full relative">
+                    <div className="bg-gray-200 rounded-2xl h-10 relative overflow-hidden transition-all duration-300"
+                         style={{ width: `${votePercentage}%` }}>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-black text-xs font-medium">
+                            ({votePercentage.toFixed(1)}%)
+                        </span>
                     </div>
-                ) : (
-                    <span
-                        className="flex-1 cursor-pointer hover:bg-amber-100 p-1 rounded"
-                        onClick={() => handleVote(option.id)}
-                    >
+                    <div className="absolute top-0 left-0 w-full h-10 flex items-center justify-between px-3 text-sm font-medium text-gray-800 cursor-pointer hover:bg-amber-100/20 rounded-2xl"
+                         onClick={() => onVote?.(option.id)}>
+                        <span>{option.optionText}</span>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex-1 flex items-center justify-between">
+                    <span className="flex-1 p-1 rounded cursor-pointer hover:bg-amber-100"
+                          onClick={() => isEditing ? setIsEditingText(true) : onVote?.(option.id)}
+                          onDoubleClick={() => isEditing && setIsEditingText(true)}
+                          title={isEditing ? "클릭하여 편집" : "클릭하여 투표"}>
                         {index + 1}. {option.optionText}
                     </span>
-                )
+                    {isEditing && (
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditingText(true)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0 ml-2 hover:bg-blue-100"
+                                title="편집">
+                            <Edit size={12} className="text-blue-500"/>
+                        </Button>
+                    )}
+                </div>
             )}
-            {isEditing && canRemove && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="group-hover:opacity-100 transition-opacity w-6 h-6 p-0 ml-2"
-                >
-                    <X size={12}/>
+            {isEditing && canRemove && !isEditingText && (
+                <Button variant="ghost" size="sm" onClick={() => onRemove(option.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 p-0 ml-2 hover:bg-red-100"
+                        title="삭제">
+                    <X size={12} className="text-red-500"/>
                 </Button>
             )}
         </div>

@@ -1,7 +1,7 @@
 import React, {createContext, type ReactNode, useContext, useState} from 'react';
 
 interface IUser {
-    id: string;
+    id: number;
     username: string;
     email: string;
     profile: string;
@@ -31,6 +31,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useUser = () => {
     const context = useContext(UserContext);
     if (!context) {

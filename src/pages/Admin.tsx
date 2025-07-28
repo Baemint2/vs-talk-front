@@ -1,4 +1,4 @@
-import {type FormEvent, useState} from "react";
+import {useState} from "react";
 import YouTube, {type YouTubeProps} from 'react-youtube';
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -8,6 +8,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog.tsx"
 import CategoryList from "@/api/category/CategoryList.tsx";
 import Vote from "@/components/vote/Vote.tsx";
@@ -37,28 +38,24 @@ const Admin = () => {
         event.target.pauseVideo();
     }
     const opts: YouTubeProps['opts'] = {
-        playerVars: {
-            autoplay: 1,
-        },
+        // playerVars: {
+        //     autoplay: 1,
+        // },
     };
 
     const handleVideoSubmit = () => {
         if (inputValue.trim()) {
-            setVideoId(inputValue);
+            setVideoId(extractYouTubeId(inputValue) || '');
             setOpen(false);
             setShowInput(false);
         }
     }
 
-    const addVideoId = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.currentTarget);
-        const videoId = formData.get('videoId') as string;
-
-        console.log('입력된 Video ID:', videoId);
-
-        setVideoId(videoId);
+    function extractYouTubeId(url: string) {
+        // youtu.be/, watch?v=, shorts/, embed/ 형태를 모두 커버
+        const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
     }
 
     const removeVideoId = () => {
@@ -106,11 +103,27 @@ const Admin = () => {
         console.log(response)
     }
 
+    // ✅ 옵션 텍스트 수정 콜백
+    const updateVoteOption = (voteIndex: number, optionId: number, newText: string) => {
+        setVotes(prevVotes =>
+            prevVotes.map((vote, idx) =>
+                idx === voteIndex
+                    ? {
+                        ...vote,
+                        options: vote.options.map(opt =>
+                            opt.id === optionId ? { ...opt, optionText: newText } : opt
+                        ),
+                    }
+                    : vote
+            )
+        );
+    };
+
     return <>
         <div className={"flex flex-col items-center gap-4 mt-10"}>
             <Input onChange={(e) => setTitle(e.target.value)}/>
             {showInput ?
-                (<form onSubmit={addVideoId}>
+                (<form>
                     <Dialog open={open} onOpenChange={setOpen}>
                         <DialogTrigger asChild>
                             <Button onClick={() => setOpen(true)}
@@ -119,9 +132,12 @@ const Admin = () => {
                                 영상 추가하기
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent aria-describedby="dialog-desc">
                             <DialogHeader>
                                 <DialogTitle>비디오 ID 입력하기</DialogTitle>
+                                <DialogDescription>
+                                    이 대화상자는 사용자에게 정보를 제공합니다.
+                                </DialogDescription>
                                 <Input
                                     name="videoId"
                                     onChange={(e) => setInputValue(e.target.value)}
@@ -165,13 +181,15 @@ const Admin = () => {
                 >
                     투표 추가하기
                 </Button>
-            ) : (<div className="w-full max-w-4xl">
-                    {votes.map((vote) => (
+            ) : (<div className="w-full max-w-4xl flex justify-center">
+                    {votes.map((vote, index) => (
                         <Vote
                             key={vote.id}
                             options={vote.options}
                             isEditing={true}
                             onVote={() => {}}
+                            voteIndex={index}            // ✅ index 전달
+                            onUpdateOption={updateVoteOption} // ✅ Admin의 콜백 전달
                         />
                     ))}
                 </div>
@@ -182,6 +200,7 @@ const Admin = () => {
                     value={selectedCategoryId || undefined}
                     onChange={handleCategoryChange}
                 />
+
             </div>
             <div className={"border border-solid border-gray-300 bg-gray-300 mt-5"}>
                 <Button onClick={() => addPost()}> 게시글 등록하기 </Button>

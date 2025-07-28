@@ -1,43 +1,31 @@
-import {Link} from "react-router-dom";
-import {User, Settings, LogOut} from 'lucide-react';
-import {useEffect, useState} from "react";
-import {useUser} from "@/components/UserContext.tsx";
-import {useAuth} from "@/hooks/useAuth.tsx";
-import api from "@/api/axiosConfig.ts";
+import {useNavigate} from "react-router-dom";
+import {User, BottleWine, Utensils, Vote, Trophy, Tag} from 'lucide-react';
+import {type JSX } from "react";
+import {useCategories} from "@/hooks/useCategories.tsx";
 
-interface IUserInfo {
-    profile?: string;
-    username: string;
-    email: string;
-}
+
 
 interface SidebarProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
+const categoryIcons: Record<string, JSX.Element> = {
+    '스포츠': <Trophy size={20}/>,
+    '연예인': <User size={20}/>,
+    '정치': <Vote size={20}/>,
+    '음식': <Utensils size={20}/>,
+    '주류': <BottleWine size={20}/>,
+};
+
 const Sidebar = ({isOpen, onClose}: SidebarProps) => {
-    const [, setUserInfo] = useState<IUserInfo | null>(null);
-    const {setUser} = useUser();
-    const {isAuthenticated, logout} = useAuth();
+    const {categories} = useCategories();
+    const navigate = useNavigate();
 
     // isLoggedIn 상태 변경 감지
-    useEffect(() => {
-        console.log("로그인 상태 변경됨:", isAuthenticated);
-        if (isAuthenticated) {
-            getUserInfo();
-        }
-    }, [isAuthenticated]);
-
-    const getUserInfo = async () => {
-        try {
-            const response = await api.get("/api/v1/userInfo");
-
-            setUser(response.data);
-            setUserInfo(response.data);
-        } catch (error) {
-            console.error("사용자 정보 가져오기 오류:", error);
-        }
+    const handleCategoryClick = (slug: string) => {
+        navigate(`/category/${slug}`);
+        onClose();
     };
 
     return (
@@ -59,48 +47,20 @@ const Sidebar = ({isOpen, onClose}: SidebarProps) => {
                         {/* 메뉴 리스트 */}
                         <nav className="p-4">
                             <ul className="space-y-2">
-                                <li>
-                                    <Link
-                                        to="/myPage"
-                                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
-                                        onClick={onClose}
+                                {categories.map(category => (
+                                    <li key={category.id}
+                                        onClick={() => handleCategoryClick(category.slug)}
+                                        className="cursor-pointer hover:bg-gray-100 p-2"
                                     >
-                                        <User size={20}/>
-                                        <span>마이 페이지</span>
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        to="/settings"
-                                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
-                                        onClick={onClose}
-                                    >
-                                        <Settings size={20}/>
-                                        <span>설정</span>
-                                    </Link>
-                                </li>
-                                {isAuthenticated ? (
-                                    <li>
-                                    <span id="logout"
-                                          className="block px-4 py-2 hover:bg-gray-700"
-                                          onClick={() => logout()}>
-                                        <div className="flex flex-row">
-                                            <LogOut/>
-                                            <span className="ml-5"> 로그아웃 </span>
-                                        </div>
-                                    </span>
+                                         <span
+                                             className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 rounded-lg transition-colors text-gray-700">
+                                             {categoryIcons[category.name] || <Tag size={20} />}
+                                             {category.name}
+                                         </span>
                                     </li>
-                                ) : (
-                                    <>
-                                        <li>
-                                            <Link to="/Login" id="login"
-                                                  className="block px-4 py-2 hover:bg-gray-700">로그인</Link>
-                                        </li>
-                                    </>
-                                )}
+                                ))}
                             </ul>
                         </nav>
-
                     </div>
                 </div>
             </aside>
