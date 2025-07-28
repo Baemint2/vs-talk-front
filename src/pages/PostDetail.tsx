@@ -126,8 +126,9 @@ const PostDetail = () => {
                       postId={post.id}
                       isEditing={false}
                       onVote={handleVote}
+                      onUpdateOption={() => {}}
                 />
-                <Comment/>
+                <Comment postId={post.id}/>
             </div>
             <div className={"border-t"}>
                 {posts.map(post => (
