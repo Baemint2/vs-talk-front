@@ -1,4 +1,3 @@
-// PostDetail.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import {useEffect, useState} from "react";
 import YouTube, {type YouTubeProps} from "react-youtube";
@@ -17,7 +16,6 @@ interface PostDetailData {
     createdAt: string;
     videoId?: string;
     voteOptionList: VoteOption[];
-    // 기타 필요한 필드들
 }
 
 const PostDetail = () => {
@@ -37,15 +35,11 @@ const PostDetail = () => {
             }
 
             try {
-                // 1. 게시글 상세 정보 가져오기
                 const postResponse = await api.get(`/api/post/get/${id}`);
-                console.log(postResponse.data);
                 setPost(postResponse.data);
 
-                // 2. 게시글 목록 가져오기 및 현재 게시글 제외
                 const postsResponse = await api.get(`/api/post/get`);
                 const filteredPosts = postsResponse.data.filter((postItem: { id: number; }) => postItem.id !== Number(id));
-                console.log(filteredPosts);
                 setPosts(filteredPosts);
 
             } catch (error) {
@@ -62,12 +56,10 @@ const PostDetail = () => {
     const onPlayerReady: YouTubeProps['onReady'] = (event) => {
         event.target.pauseVideo();
     }
+
     const opts: YouTubeProps['opts'] = {
         width: '100%',
         height: '250',
-        // playerVars: {
-        //     autoplay: 1,
-        // },
     };
 
     if (loading) {
@@ -96,51 +88,68 @@ const PostDetail = () => {
         if (!post) return;
 
         try {
-            // 서버에 투표 요청
             await api.post(`/api/vote/add`, {
                 optionId: optionId,
                 postId: post.id,
                 userId: id,
             });
-
-
         } catch (error) {
             console.error('투표 실패:', error);
-            // 에러 처리 (토스트 메시지 등)
         }
     };
 
-    return <>
-        <div className="pb-20 mt-10">
-            <div className={"flex flex-col items-center gap-4"}>
-                <div>{post.title}</div>
-                {post.videoId === '' ? (<div></div>) :
-                    (
-                        <YouTube
-                        videoId={post.videoId}
-                        opts={opts}
-                        onReady={onPlayerReady}
-                        className="flex justify-center"/>)
-                }
-                <Vote options={post.voteOptionList || []}
-                      postId={post.id}
-                      isEditing={false}
-                      onVote={handleVote}
-                      onUpdateOption={() => {}}
-                />
+    return (
+        <div className="min-h-screen bg-gray-50">
+            {/* 메인 콘텐츠 */}
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                <div className="bg-white rounded-lg shadow-sm border mb-8">
+                    <div className="p-6 flex flex-col items-center">
+                        <h1 className="text-2xl font-bold text-gray-800 mb-4">{post.title}</h1>
+
+                        {post.videoId && post.videoId !== '' && (
+                            <div className="mb-6">
+                                <YouTube
+                                    videoId={post.videoId}
+                                    opts={opts}
+                                    onReady={onPlayerReady}
+                                    className="flex justify-center"
+                                />
+                            </div>
+                        )}
+
+                        <Vote
+                            options={post.voteOptionList || []}
+                            postId={post.id}
+                            isEditing={false}
+                            onVote={handleVote}
+                            onUpdateOption={() => {}}
+                        />
+                    </div>
+                </div>
+
                 <Comment postId={post.id}/>
             </div>
-            <div className={"border-t"}>
-                {posts.map(post => (
-                    <Post id={post.id}
-                          key={post.id}
-                          title={post.title}
-                          author={post.author}
-                          updatedAt={post.updatedAt}
-                    />))}
+
+            {/* 관련 게시글 */}
+            <div className="bg-white border-t">
+                <div className="max-w-6xl mx-auto px-4 py-8">
+                    <h3 className="text-xl font-bold text-gray-800 mb-6">다른 게시글</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {posts.slice(0, 6).map(post => (
+                            <Post
+                                key={post.id}
+                                id={post.id}
+                                title={post.title}
+                                author={post.author}
+                                updatedAt={post.updatedAt}
+                                commentCount={post.commentCount}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
-    </>
+    );
 };
 
 export default PostDetail;

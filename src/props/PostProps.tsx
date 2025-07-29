@@ -4,4 +4,6 @@ export interface PostProps {
     author: string;
     updatedAt: string;
     thumbnailUrl?: string;
+    commentCount?: number;
+    likeCount?: number;
 }
