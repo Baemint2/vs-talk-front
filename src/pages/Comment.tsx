@@ -15,6 +15,7 @@ interface CommentType {
   parentId: number | null;
   updatedAt: string;
   replies?: CommentType[];
+  deleted: boolean;
 }
 
 const Comment = ({ postId }: CommentProps) => {
@@ -30,7 +31,7 @@ const Comment = ({ postId }: CommentProps) => {
     try {
       const response = await api.get(`/api/comment/all/${postId}`);
       const commentsData = response.data;
-
+      console.log(commentsData);
       // 중첩 구조로 변환
       const nestedComments = buildNestedComments(commentsData);
       setComments(nestedComments);
@@ -64,6 +65,23 @@ const Comment = ({ postId }: CommentProps) => {
     return rootComments;
   };
 
+  // 총 댓글 개수 계산 (대댓글 포함)
+  const getTotalCommentCount = (comments: CommentType[]): number => {
+    let total = 0;
+
+    const countRecursive = (commentList: CommentType[]) => {
+      commentList.forEach(comment => {
+        total += 1; // 현재 댓글 카운트
+        if (comment.replies && comment.replies.length > 0) {
+          countRecursive(comment.replies); // 재귀적으로 답글들 카운트
+        }
+      });
+    };
+
+    countRecursive(comments);
+    return total;
+  };
+
   // 새 댓글 추가
   const addComment = async () => {
     if (inputValue.trim() === '') return;
@@ -83,23 +101,16 @@ const Comment = ({ postId }: CommentProps) => {
   };
 
   // 댓글 추가 핸들러 (자식 컴포넌트에서 호출)
-  const handleCommentAdd = () => {
-    fetchComments(); // 전체 댓글 구조 새로고침
+  // 댓글 변경 후 새로고침 핸들러 (추가/수정/삭제 후 공통으로 사용)
+  const handleCommentsRefresh = () => {
+    fetchComments();
   };
 
-  // 댓글 삭제 핸들러
-  const handleCommentDelete = async (commentId: number) => {
-    try {
-      await api.delete(`/api/comment/delete/${commentId}`);
-      fetchComments(); // 댓글 목록 새로고침
-    } catch (error) {
-      console.error('댓글 삭제 실패:', error);
-    }
-  };
+  const totalCommentCount = getTotalCommentCount(comments);
 
   return (
       <div className="w-full max-w-4xl mx-auto px-4 mt-8">
-        <h3 className="text-lg font-semibold mb-4">댓글 {comments.length}개</h3>
+        <h3 className="text-lg font-semibold mb-4">댓글 {totalCommentCount}개</h3>
 
         {/* 새 댓글 작성 폼 */}
         <div className="flex gap-3 mb-6">
@@ -125,6 +136,12 @@ const Comment = ({ postId }: CommentProps) => {
                 댓글 작성
               </button>
             </div>
+            {comments.length > 0 ? <button
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                onClick={fetchComments}
+            >
+              댓글 목록 재조회
+            </button> : null}
           </div>
         </div>
 
@@ -137,8 +154,8 @@ const Comment = ({ postId }: CommentProps) => {
                   postId={postId}
                   level={0}
                   userInfo={userInfo}
-                  onCommentAdd={handleCommentAdd}
-                  onCommentDelete={handleCommentDelete}
+                  onCommentsChange={handleCommentsRefresh}
+                  isDeleted={comment.deleted}
               />
           ))}
         </div>
