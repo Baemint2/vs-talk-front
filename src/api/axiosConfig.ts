@@ -22,6 +22,9 @@ const getBaseURL = () => {
 const api = axios.create({
     baseURL: getBaseURL(), // 백엔드 서버 주소
     withCredentials: true, // 쿠키를 자동으로 포함
+    headers: {
+        'Content-Type': 'application/json', // 기본 Content-Type 설정
+    },
 });
 
 // 요청 인터셉터 - 모든 요청에 쿠키가 자동으로 포함됨

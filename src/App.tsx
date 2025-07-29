@@ -23,7 +23,7 @@ const router = createBrowserRouter([
                 element: <Home/>
             },
             {
-                path: 'category/manage',
+                path: 'admin/categories',
                 element: <CategoryManage />
             },
             {

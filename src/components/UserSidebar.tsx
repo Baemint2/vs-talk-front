@@ -18,7 +18,7 @@ const categoryIcons: Record<string, JSX.Element> = {
     '주류': <BottleWine size={20}/>,
 };
 
-const Sidebar = ({isOpen, onClose}: SidebarProps) => {
+const UserSidebar = ({isOpen, onClose}: SidebarProps) => {
     const {categories} = useCategories();
     const navigate = useNavigate();
 
@@ -41,7 +41,7 @@ const Sidebar = ({isOpen, onClose}: SidebarProps) => {
             <aside>
                 <div className="sidebar">
                     <div
-                        className={`fixed top-0 right-0 h-full ${isOpen ? 'w-64' : 'w-0'} bg-white shadow-lg overflow-hidden transition-all duration-300 z-50`}
+                        className={`fixed top-0 left-0 h-full ${isOpen ? 'w-64' : 'w-0'} bg-white shadow-lg overflow-hidden transition-all duration-300 z-50`}
                         id="sidebar">
 
                         {/* 메뉴 리스트 */}
@@ -68,4 +68,4 @@ const Sidebar = ({isOpen, onClose}: SidebarProps) => {
     );
 };
 
-export default Sidebar;
+export default UserSidebar;

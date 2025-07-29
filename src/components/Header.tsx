@@ -1,19 +1,25 @@
 import logo from '@/assets/logo2.png'
 import {useNavigate} from "react-router-dom";
-import { Search } from 'lucide-react';
+import {AlignJustify} from 'lucide-react';
 
-const Header = () => {
+interface HeaderProps {
+    onMenuClick: () => void;
+}
+
+const Header = ({onMenuClick}: HeaderProps) => {
 
     const navigate = useNavigate();
 
     return (
-        <header className="text-white h-20" style={{backgroundColor: '#F9FAFB'}}>
+        <header className="text-white h-20 border-b-2 border-b-gray-300" style={{backgroundColor: '#F9FAFB'}}>
             <div className="flex justify-between items-center">
                 <img src={logo}
                      alt="logo"
-                     className="w-16 h-16 mt-2 ml-2 rounded-xl"
+                     className="w-16 h-16 mt-2 rounded-xl"
                      onClick={() => navigate('/')}/>
-                <Search size={30} className={"text-black"}/>
+                <span onClick={onMenuClick}>
+                    <AlignJustify size={30} className={"text-black mr-5"}/>
+                </span>
             </div>
         </header>
     );
