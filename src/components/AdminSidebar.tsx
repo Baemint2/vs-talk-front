@@ -1,5 +1,6 @@
-import {X, Users, BarChart3, Settings, Shield, MessageSquare, Tag} from 'lucide-react';
+import {X, Users, BarChart3, Settings, Shield, MessageSquare, Tag, LogOut} from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
+import {useAuth} from "@/hooks/useAuth.tsx";
 
 interface AdminSidebarProps {
     isOpen: boolean;
@@ -8,6 +9,7 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({isOpen, onClose}: AdminSidebarProps) => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const menuItems = [
         {
@@ -52,7 +54,7 @@ const AdminSidebar = ({isOpen, onClose}: AdminSidebarProps) => {
             {/* 배경 오버레이 */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    className="fixed inset-0"
                     onClick={onClose}
                 />
             )}
@@ -90,6 +92,17 @@ const AdminSidebar = ({isOpen, onClose}: AdminSidebarProps) => {
                                 <span className="font-medium">{item.label}</span>
                             </button>
                         ))}
+                        <button className="w-full flex items-center gap-3 p-3 text-left hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors group"
+                                onClick={() => {
+                                    onClose();
+                                    logout();
+                                }}
+                        >
+                            <span className="text-gray-600 group-hover:text-red-600">
+                                    <LogOut />
+                                </span>
+                            <span className="font-medium">로그아웃</span>
+                        </button>
                     </nav>
                 </div>
 

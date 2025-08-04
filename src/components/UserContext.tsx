@@ -8,6 +8,7 @@ interface IUser {
     nickname: string;
     password: string;
     providerKey: string;
+    role: string;
 }
 
 interface UserContextType {

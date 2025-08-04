@@ -1,5 +1,5 @@
 import {useState} from "react";
-import axios from "axios";
+import api from "@/api/axiosConfig.ts";
 
 const AdminLogin = () => {
 
@@ -12,14 +12,15 @@ const AdminLogin = () => {
             password: password,
         };
 
-        const response = await axios.post("/api/v1/login", data, {
+        const response = await api.post("v1/login", data, {
             headers: {
                 'Content-Type': 'application/json',
             }
         });
 
-        const test = await response.data;
-        console.log(test)
+        if (response.status === 200) {
+            window.location.href = "/";
+        }
     };
 
     return (

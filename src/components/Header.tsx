@@ -1,12 +1,14 @@
 import logo from '@/assets/logo2.png'
 import {useNavigate} from "react-router-dom";
 import {AlignJustify} from 'lucide-react';
+import {useUser} from "@/components/UserContext.tsx";
 
 interface HeaderProps {
     onMenuClick: () => void;
 }
 
 const Header = ({onMenuClick}: HeaderProps) => {
+    const { user } = useUser();
 
     const navigate = useNavigate();
 
@@ -17,9 +19,9 @@ const Header = ({onMenuClick}: HeaderProps) => {
                      alt="logo"
                      className="w-16 h-16 mt-2 rounded-xl"
                      onClick={() => navigate('/')}/>
-                <span onClick={onMenuClick}>
+                { user?.role === 'ADMIN' ? <span onClick={onMenuClick}>
                     <AlignJustify size={30} className={"text-black mr-5"}/>
-                </span>
+                </span> : null}
             </div>
         </header>
     );

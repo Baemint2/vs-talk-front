@@ -1,7 +1,6 @@
-// hooks/useAuth.ts
-import { useState, useEffect } from 'react';
-import {useNavigate} from "react-router-dom";
-import {useUser} from "@/components/UserContext.tsx";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/components/UserContext.tsx";
 import api from "@/api/axiosConfig.ts";
 
 interface IUserInfo {
@@ -12,7 +11,7 @@ interface IUserInfo {
 
 export const useAuth = () => {
     const [userInfo, setUserInfo] = useState<IUserInfo | null>(null);
-    const {setUser} = useUser();
+    const { setUser } = useUser();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [userReady, setUserReady] = useState(false);
@@ -23,20 +22,25 @@ export const useAuth = () => {
     }, []);
 
     useEffect(() => {
-        console.log("로그인 상태 변경됨:", isAuthenticated);
         if (isAuthenticated) {
             getUserInfo();
+        } else {
+            setUser(null);
+            setUserInfo(null);
+            setUserReady(false);
         }
     }, [isAuthenticated]);
 
     const checkAuthStatus = async () => {
         try {
-            const response = await fetch("/api/v1/loginCheck");
-            const data = await response.json();
-            setIsAuthenticated(Boolean(data));
-        } catch (error) {
-            console.error("Auth check failed:", error);
-            setIsAuthenticated(false);
+            await api.get("/v1/loginCheck");
+            setIsAuthenticated(true);
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                setIsAuthenticated(false);
+            } else {
+                console.error("Auth check failed:", error);
+            }
         } finally {
             setLoading(false);
         }
@@ -44,32 +48,48 @@ export const useAuth = () => {
 
     const getUserInfo = async () => {
         try {
-            const response = await api.get("/api/v1/userInfo");
+            const response = await api.get("/v1/userInfo");
 
-            setUser(response.data);
-            setUserInfo(response.data);
-            setUserReady(true); // 사용자 정보 로드 완료
-        } catch (error) {
-            console.error("사용자 정보 가져오기 오류:", error);
+            if (response.status === 200) {
+                setUser(response.data);
+                setUserInfo(response.data);
+                setUserReady(true);
+            } else {
+                setUserReady(false);
+            }
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                setIsAuthenticated(false);
+                setUser(null);
+            }
+            console.error("유저 정보 조회 실패:", error);
             setUserReady(false);
         }
     };
 
     const logout = async () => {
         console.log("로그아웃 호출");
-        const response = await fetch("/api/v1/logout", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        const data = await response.text();
-        console.log(data);
-        if (data === "로그아웃 성공") {
+        try {
+            await api.post("/v1/logout");
+        } catch (e) {
+            console.error("로그아웃 API 실패", e);
+        } finally {
+            setUser(null);
+            setUserInfo(null);
             setIsAuthenticated(false);
-            navigate("/");
-        }
-    }
+            setUserReady(false);
 
-    return { isAuthenticated, loading, userReady, checkAuthStatus, logout, userInfo };
+            // ✅ 홈으로 이동
+            navigate("/", { replace: true });
+        }
+    };
+
+    return {
+        isAuthenticated,
+        loading,
+        userReady,
+        checkAuthStatus,
+        logout,
+        userInfo,
+    };
 };
