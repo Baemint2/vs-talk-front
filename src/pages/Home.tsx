@@ -1,11 +1,10 @@
 import logo from '../assets/logo2.png'
 import Post from "@/components/post/Post.tsx";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {Search, X} from "lucide-react";
-import api from "@/api/axiosConfig.ts";
-import type {PostProps} from "@/props/PostProps.tsx";
 import {useLocation, useParams} from "react-router-dom";
 import {useCategories} from "@/hooks/useCategories.tsx";
+import {usePosts} from "@/hooks/usePosts.tsx";
 
 interface SearchParams {
     orderBy: 'desc' | 'asc';
@@ -16,7 +15,6 @@ const Home = () => {
     const location = useLocation();
     const params = useParams();
     const { categories } = useCategories();
-    const [posts, setPosts] = useState<PostProps[]>([]);
     const [searchInput, setSearchInput] = useState<string>('');
     const [searchParams, setSearchParams] = useState<SearchParams>({
         orderBy: 'desc' // 기본값: 최신순
@@ -26,44 +24,7 @@ const Home = () => {
     const slug = params.slug;
     const currentCategory = categories.find(cat => cat.slug === slug);
 
-    // API 파라미터 빌드 함수
-    const buildApiParams = (params: SearchParams) => {
-        const apiParams: Record<string, string> = {
-            orderBy: params.orderBy
-        };
-
-        // title이 있고 비어있지 않은 경우만 추가
-        if (params.title && params.title.trim() !== '') {
-            apiParams.title = params.title.trim();
-        }
-
-        return apiParams;
-    };
-
-    useEffect(() => {
-        const fetchPostList = async () => {
-            try {
-                let apiUrl = '/api/post/get';
-
-                if (isCategoryPage && slug) {
-                    apiUrl = `/api/post/get/category/${slug}`;
-                }
-
-                if (searchInput) {
-                    apiUrl = `/api/post/get/search`;
-                }
-
-                const response = await api.get(apiUrl, {
-                    params: buildApiParams(searchParams)
-                });
-
-                setPosts(response.data);
-            } catch (error) {
-                console.error('게시글 목록 가져오기 실패:', error);
-            }
-        };
-        fetchPostList();
-    }, [isCategoryPage, slug, searchParams]);
+    const { posts } = usePosts(searchParams, slug);
 
     // 정렬 변경 핸들러
     const handleSortChange = (sortType: 'desc' | 'asc') => {
@@ -101,7 +62,7 @@ const Home = () => {
     const isSearching = searchParams.title && searchParams.title.trim() !== '';
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50" >
             {/* 헤더 섹션 */}
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-6xl mx-auto px-4 py-6">

@@ -9,7 +9,6 @@ import AdminSidebar from "@/components/AdminSidebar.tsx";
 const MainLayout = () => {
     const location = useLocation();
     const isLoginPage = location.pathname.startsWith("/login");
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [isAdminSidebarOpen, setIsAdminSidebarOpen] = useState(false);
     const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
@@ -28,14 +27,6 @@ const MainLayout = () => {
 
     const closeUserSidebar = () => {
         setIsUserSidebarOpen(false);
-    };
-
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
-
-    const closeSidebar = () => {
-        setIsSidebarOpen(false);
     };
 
     return (

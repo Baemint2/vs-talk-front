@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import api from "@/api/axiosConfig.ts";
+import {timeAgo} from "@/util/Time.ts";
 
 interface CommentType {
     id: number;
@@ -24,6 +25,7 @@ interface CommentItemProps {
     level: number;
     userInfo: UserInfo | null;
     onCommentsChange: () => void; // 댓글 변경 후 새로고침 콜백 (하나로 통합)
+    isDeleted: boolean; // ✅ 추가
 }
 
 const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: CommentItemProps) => {
@@ -41,7 +43,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
         if (replyText.trim() === '') return;
 
         try {
-            await api.post(`/api/comment/add`, {
+            await api.post(`comment/add`, {
                 content: replyText,
                 postId: postId,
                 parentId: comment.id,
@@ -57,7 +59,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
 
     const handleDelete = async () => {
         try {
-            await api.delete(`/api/comment/${comment.id}`);
+            await api.delete(`comment/${comment.id}`);
             onCommentsChange(); // 부모에게 새로고침 요청
         } catch (error) {
             console.error('댓글 삭제 실패:', error);
@@ -72,7 +74,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
         }
 
         try {
-            await api.put(`/api/comment/${comment.id}`, {
+            await api.put(`comment/${comment.id}`, {
                 content: editText.trim()
             }, {
                 headers: {
@@ -148,7 +150,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
                     </div>
 
                     <span className="text-xs text-gray-500">
-                        {new Date(comment.updatedAt).toLocaleString()}
+                        {timeAgo(comment.updatedAt)}
                     </span>
                 </div>
 
@@ -273,6 +275,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
                             level={level + 1}
                             userInfo={userInfo}
                             onCommentsChange={onCommentsChange}
+                            isDeleted={reply.deleted}
                         />
                     ))}
                 </div>

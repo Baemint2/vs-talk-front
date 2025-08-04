@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {useEffect, useState} from "react";
-import YouTube, {type YouTubeProps} from "react-youtube";
 import Vote from "@/components/vote/Vote.tsx";
 import Comment from "@/pages/Comment.tsx";
 import Post from "@/components/post/Post.tsx";
 import api from "@/api/axiosConfig.ts";
 import type {PostProps} from "@/props/PostProps.tsx";
 import type {VoteOption} from "@/props/VoteOptionProps.tsx";
+import LazyYouTube from "@/components/LazyYoutube.tsx";
 
 interface PostDetailData {
     id: number;
@@ -35,10 +35,10 @@ const PostDetail = () => {
             }
 
             try {
-                const postResponse = await api.get(`/api/post/get/${id}`);
+                const postResponse = await api.get(`posts/${id}`);
                 setPost(postResponse.data);
 
-                const postsResponse = await api.get(`/api/post/get`);
+                const postsResponse = await api.get(`posts`);
                 const filteredPosts = postsResponse.data.filter((postItem: { id: number; }) => postItem.id !== Number(id));
                 setPosts(filteredPosts);
 
@@ -52,15 +52,6 @@ const PostDetail = () => {
 
         fetchData();
     }, [id]);
-
-    const onPlayerReady: YouTubeProps['onReady'] = (event) => {
-        event.target.pauseVideo();
-    }
-
-    const opts: YouTubeProps['opts'] = {
-        width: '100%',
-        height: '250',
-    };
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
@@ -88,11 +79,11 @@ const PostDetail = () => {
         if (!post) return;
 
         try {
-            await api.post(`/api/vote/add`, {
+            await api.post(`vote/add`, {
                 optionId: optionId,
                 postId: post.id,
                 userId: id,
-            });
+            })
         } catch (error) {
             console.error('투표 실패:', error);
         }
@@ -101,19 +92,14 @@ const PostDetail = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* 메인 콘텐츠 */}
-            <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="max-w-4xl mx-auto px-2 py-6">
                 <div className="bg-white rounded-lg shadow-sm border mb-8">
-                    <div className="p-6 flex flex-col items-center">
+                    <div className="p-3 flex flex-col items-center">
                         <h1 className="text-2xl font-bold text-gray-800 mb-4">{post.title}</h1>
 
                         {post.videoId && post.videoId !== '' && (
                             <div className="mb-6">
-                                <YouTube
-                                    videoId={post.videoId}
-                                    opts={opts}
-                                    onReady={onPlayerReady}
-                                    className="flex justify-center"
-                                />
+                                <LazyYouTube videoId={post.videoId} width="300px" height="300px" />
                             </div>
                         )}
 

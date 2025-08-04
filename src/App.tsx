@@ -8,6 +8,8 @@ import AdminLogin from "@/pages/AdminLogin.tsx";
 import Admin from './pages/Admin';
 import {UserProvider} from "@/components/UserContext.tsx";
 import CategoryManage from "@/pages/CategoryManage";
+import PostManage from "@/pages/PostManage.tsx";
+import EditPost from "@/components/post/EditPost.tsx";
 
 const router = createBrowserRouter([
     {
@@ -24,7 +26,11 @@ const router = createBrowserRouter([
             },
             {
                 path: 'admin/categories',
-                element: <CategoryManage />
+                element: <CategoryManage/>
+            },
+            {
+                path: 'admin/posts',
+                element: <PostManage orderBy={'desc'}/>
             },
             {
                 path: 'post/:id',
@@ -33,6 +39,10 @@ const router = createBrowserRouter([
             {
                 path: '/post/add',
                 element: <Admin/>
+            },
+            {
+                path: '/post/update/:id',
+                element: <EditPost/>
             },
             {
                 path: 'login',

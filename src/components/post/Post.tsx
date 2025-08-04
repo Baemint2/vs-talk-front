@@ -1,6 +1,7 @@
 // Post.tsx 업데이트 제안
 import { useNavigate } from "react-router-dom";
 import { Clock, User, MessageCircle, Heart } from "lucide-react";
+import {timeAgo} from "@/util/Time.ts";
 
 interface PostProps {
     id: number;
@@ -49,7 +50,7 @@ const Post = ({ id, title, author, updatedAt, commentCount = 0, likeCount = 0, t
                     </div>
                     <div className="flex items-center gap-1">
                         <Clock size={14} />
-                        <span>{new Date(updatedAt).toLocaleDateString()}</span>
+                        <span>{timeAgo(updatedAt)}</span>
                     </div>
                 </div>
 

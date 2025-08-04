@@ -10,8 +10,9 @@ interface VoteProps {
     isEditing?: boolean;
     postId?: number;
     onVote?: (optionId: number | string) => void;
+    onAddOption: (voteIndex: number, newOption: VoteOption) => void;
     onUpdateOption?: (voteIndex: number, optionId: number, newText: string) => void; // ✅ 추가
-    voteIndex: number;
+    voteIndex?: number;
 }
 
 interface VoteCount {
@@ -19,7 +20,7 @@ interface VoteCount {
     count: number;
 }
 
-const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUpdateOption, voteIndex }: VoteProps) => {
+const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAddOption, onUpdateOption, voteIndex }: VoteProps) => {
     const [voteOptions, setVoteOptions] = useState<VoteOption[]>(initialOptions);
     const [voteCount, setVoteCount] = useState<VoteCount[]>([]);
     const [newOptionText, setNewOptionText] = useState('');
@@ -32,18 +33,19 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUp
 
     const fetchVoteCount = async () => {
         try {
-            const response = await api.get(`/api/vote/count/${postId || ''}`);
-            setVoteCount(response.data);
+            const response = await api.get(`vote/count/${postId || ''}`);
+            const data = response.data;
+            setVoteCount(Array.isArray(data) ? data : (data ? [data] : []));
         } catch (error) {
             console.error('투표 카운트 가져오기 실패:', error);
         }
     };
 
-    const fetchIsVoted = async () => {
-        if (didFetch.current) return;
+    const fetchIsVoted = async (force = false) => {
+        if (didFetch.current && !force) return;
         didFetch.current = true;
         try {
-            const response = await api.get(`/api/vote/${postId || ''}/status`);
+            const response = await api.get(`vote/${postId || ''}/status`);
             setIsVoted(response.data);
         } catch (error) {
             console.error("투표 여부 확인 실패:", error);
@@ -66,19 +68,23 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUp
         setVoteOptions(prev => prev.map(opt =>
             opt.id === optionId ? { ...opt, optionText: newText } : opt
         ));
-        onUpdateOption?.(voteIndex, optionId, newText);
+        onUpdateOption?.(voteIndex ?? 0, optionId, newText);
     };
 
     const addOption = () => {
         if (newOptionText.trim()) {
             const newOption: VoteOption = {
-                id: Date.now() + 1,
+                id: Date.now() + Math.random(),
                 optionText: newOptionText,
                 color: '#FBBF24',
                 votes: 0,
             };
             const updated = [...voteOptions, newOption];
             updateOptions(updated);
+
+            // ✅ 상위에 알림
+            onAddOption?.(voteIndex ?? 0, newOption);
+
             setNewOptionText('');
         }
     };
@@ -93,7 +99,8 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUp
     const handleVote = async (optionId: number | string) => {
         try {
             await onVote?.(optionId);
-            await fetchVoteCount();
+            await fetchVoteCount();   // 투표 수 다시 가져오기
+            await fetchIsVoted(true); // ✅ 강제로 상태 갱신
         } catch (error) {
             console.error('투표 처리 실패:', error);
         }
@@ -110,11 +117,10 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUp
             )}
 
             <div className="flex flex-col items-center text-left">
-                {voteOptions.map((option, index) => (
+                {voteOptions.map((option) => (
                     <VoteOption
                         key={option.id}
                         option={option}
-                        index={index}
                         isEditing={isEditing}
                         onUpdate={updateOptionText}
                         onRemove={removeOption}
@@ -145,7 +151,6 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onUp
 
 interface VoteOptionProps {
     option: VoteOption;
-    index: number;
     isEditing?: boolean;
     onUpdate: (optionId: number, newText: string) => void;
     onRemove: (optionId: number) => void;
@@ -155,7 +160,7 @@ interface VoteOptionProps {
     canRemove: boolean;
 }
 
-const VoteOption = ({ option, index, isEditing, isVoted, voteCount, onUpdate, onRemove, onVote, canRemove }: VoteOptionProps) => {
+const VoteOption = ({ option, isEditing, isVoted, voteCount, onUpdate, onRemove, onVote, canRemove }: VoteOptionProps) => {
     const [isEditingText, setIsEditingText] = useState(false);
     const [editText, setEditText] = useState(option.optionText);
 
@@ -208,7 +213,7 @@ const VoteOption = ({ option, index, isEditing, isVoted, voteCount, onUpdate, on
                           onClick={() => isEditing ? setIsEditingText(true) : onVote?.(option.id)}
                           onDoubleClick={() => isEditing && setIsEditingText(true)}
                           title={isEditing ? "클릭하여 편집" : "클릭하여 투표"}>
-                        {index + 1}. {option.optionText}
+                        {option.optionText}
                     </span>
                     {isEditing && (
                         <Button variant="ghost" size="sm" onClick={() => setIsEditingText(true)}
