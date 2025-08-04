@@ -16,7 +16,7 @@ export const useCategories = () => {
         const fetchCategories = async () => {
             try {
                 setLoading(true);
-                const response = await api.get<Category[]>('/api/category/all');
+                const response = await api.get<Category[]>('category/all');
                 setCategories(response.data);
             } catch (err) {
                 setError('카테고리를 불러오는데 실패했습니다.');
@@ -37,7 +37,7 @@ export const useCategories = () => {
                 slug: slug.toLowerCase(),
             };
 
-            const response = await api.post<Category>('/api/category/add', newCategory);
+            const response = await api.post<Category>('category/add', newCategory);
 
             // 상태에 새 카테고리 추가
             setCategories(prev => [...prev, response.data]);
@@ -52,7 +52,7 @@ export const useCategories = () => {
 
     const deleteCategory = async (id: number) => {
         try {
-            await api.delete(`/api/category/delete/${id}`);
+            await api.delete(`category/delete/${id}`);
 
             window.location.reload();
         } catch (error) {

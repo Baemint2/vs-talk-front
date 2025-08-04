@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "@/api/axiosConfig.ts";
 import { useAuth } from "@/hooks/useAuth";
 import CommentItem from "@/components/CommentItem.tsx";
+import {check} from "korcen";
 
 interface CommentProps {
   postId: number;
@@ -29,7 +30,7 @@ const Comment = ({ postId }: CommentProps) => {
 
   const fetchComments = async () => {
     try {
-      const response = await api.get(`/api/comment/all/${postId}`);
+      const response = await api.get(`comment/all/${postId}`);
       const commentsData = response.data;
       console.log(commentsData);
       // 중첩 구조로 변환
@@ -86,8 +87,9 @@ const Comment = ({ postId }: CommentProps) => {
   const addComment = async () => {
     if (inputValue.trim() === '') return;
 
+    if (check(inputValue)) return;
     try {
-      await api.post(`/api/comment/add`, {
+      await api.post(`comment/add`, {
         content: inputValue,
         postId: postId,
         parentId: null,
