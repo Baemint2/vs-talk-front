@@ -10,43 +10,30 @@ const MainLayout = () => {
     const location = useLocation();
     const isLoginPage = location.pathname.startsWith("/login");
 
-    const [isAdminSidebarOpen, setIsAdminSidebarOpen] = useState(false);
-    const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
+    const [openSidebar, setOpenSidebar] = useState<"admin" | "user" | null>(null);
 
     const toggleAdminSidebar = () => {
-        setIsAdminSidebarOpen(!isAdminSidebarOpen);
+        setOpenSidebar((prev) => (prev === "admin" ? null : "admin"));
     };
 
     const toggleUserSidebar = () => {
-        setIsUserSidebarOpen(!isUserSidebarOpen);
+        setOpenSidebar((prev) => (prev === "user" ? null : "user"));
     };
 
-    const closeAdminSidebar = () => {
-        setIsAdminSidebarOpen(false);
-    };
-
-    const closeUserSidebar = () => {
-        setIsUserSidebarOpen(false);
-    };
+    const closeAdminSidebar = () => setOpenSidebar((prev) => (prev === "admin" ? null : prev));
+    const closeUserSidebar = () => setOpenSidebar((prev) => (prev === "user" ? null : prev));
 
     return (
         <div style={{display: 'flex', flexDirection: 'column'}}>
             <Header onMenuClick={toggleAdminSidebar}/>
             <main className={`${isLoginPage ? 'login' : 'full'} flex-1 pb-30`}>
                 <ScrollToTop/>
-                <Outlet/> {/* 라우팅되는 페이지가 여기에 들어감 */}
+                <Outlet/>   {/* 라우팅되는 페이지가 여기에 들어감 */}
             </main>
             <Footer onMenuClick={toggleUserSidebar}/>
 
-            <AdminSidebar
-                isOpen={isAdminSidebarOpen}
-                onClose={closeAdminSidebar}
-            />
-
-            <UserSidebar
-                isOpen={isUserSidebarOpen}
-                onClose={closeUserSidebar}
-            />
+            <AdminSidebar isOpen={openSidebar === "admin"} onClose={closeAdminSidebar} />
+            <UserSidebar isOpen={openSidebar === "user"} onClose={closeUserSidebar} />
 
         </div>
     );

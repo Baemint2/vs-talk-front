@@ -21,7 +21,9 @@ export default function Admin() {
             // 2xx일 때만 여기 실행
             console.log("게시글 등록 성공", response.data);
             navigate(`/post/${response.data}`);
-        } catch (error: never) {
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             if (error.response?.status === 401) {
                 alert("로그인이 필요합니다.");
                 // 필요시 로그인 페이지로 리다이렉트

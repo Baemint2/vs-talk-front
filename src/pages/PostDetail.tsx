@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import Vote from "@/components/vote/Vote.tsx";
 import Comment from "@/pages/Comment.tsx";
 import Post from "@/components/post/Post.tsx";
@@ -7,6 +7,7 @@ import api from "@/api/axiosConfig.ts";
 import type {PostProps} from "@/props/PostProps.tsx";
 import type {VoteOption} from "@/props/VoteOptionProps.tsx";
 import LazyYouTube from "@/components/LazyYoutube.tsx";
+import VoteChart from "@/components/vote/VoteCharts.tsx";
 
 interface PostDetailData {
     id: number;
@@ -16,7 +17,11 @@ interface PostDetailData {
     createdAt: string;
     videoId?: string;
     voteOptionList: VoteOption[];
+    voteEnabled: boolean;
+    voteEndTime: string;
 }
+
+export interface VoteCount { voteOptionId: number; count: number; }
 
 const PostDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -25,6 +30,34 @@ const PostDetail = () => {
     const [posts, setPosts] = useState<PostProps[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [counts, setCounts] = useState<VoteCount[]>([]);
+    const [countLoading, setCountLoading] = useState(false);
+
+    const fetchVoteCount = useCallback(async () => {
+        setCountLoading(true);
+        try {
+            const { data } = await api.get(`votes/count/${id}`);
+            console.log(data);
+            setCounts(Array.isArray(data) ? data : (data ? [data] : []));
+        } finally {
+            setCountLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => { fetchVoteCount(); }, [fetchVoteCount]);
+
+    const handleVote = async (optionId: number | string) => {
+        if (!post) return;
+        try {
+            await api.post(`votes`, {
+                optionId,
+                postId: post.id,
+            });
+            await fetchVoteCount(); // ← 투표 성공 후 카운트만 갱신
+        } catch (e) {
+            console.error('투표 실패:', e);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -75,20 +108,6 @@ const PostDetail = () => {
         return <div>게시글을 찾을 수 없습니다.</div>;
     }
 
-    const handleVote = async (optionId: number | string) => {
-        if (!post) return;
-
-        try {
-            await api.post(`vote/add`, {
-                optionId: optionId,
-                postId: post.id,
-                userId: id,
-            })
-        } catch (error) {
-            console.error('투표 실패:', error);
-        }
-    };
-
     return (
         <div className="min-h-screen bg-gray-50">
             {/* 메인 콘텐츠 */}
@@ -103,12 +122,24 @@ const PostDetail = () => {
                             </div>
                         )}
 
+                        <VoteChart
+                            options={post.voteOptionList}
+                            counts={counts}
+                            loading={countLoading}
+                        />
+
+                        {/* 투표 옵션 */}
                         <Vote
                             options={post.voteOptionList || []}
                             postId={post.id}
+                            counts={counts}                 // ← 같은 데이터 공유
                             isEditing={false}
                             onVote={handleVote}
+                            voteEnabled={post.voteEnabled}
+                            voteEndTime={post.voteEndTime}
                             onUpdateOption={() => {}}
+                            onRemoveOption={() => {}}
+                            onAddOption={() => {}}
                         />
                     </div>
                 </div>
@@ -129,6 +160,7 @@ const PostDetail = () => {
                                 author={post.author}
                                 updatedAt={post.updatedAt}
                                 commentCount={post.commentCount}
+                                categoryName={post.categoryName}
                             />
                         ))}
                     </div>

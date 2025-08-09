@@ -1,11 +1,14 @@
 import {useState} from "react";
 import api from "@/api/axiosConfig.ts";
+import {useNavigate} from "react-router-dom";
+import {useUser} from "@/components/UserContext.tsx";
 
 const AdminLogin = () => {
 
     const [username, setUsername] = useState<string>("")
     const [password, setPassword] = useState<string>("")
-
+    const {setUser} = useUser();
+    const navigate = useNavigate();
     const handleLogin = async () => {
         const data = {
             username: username,
@@ -17,10 +20,8 @@ const AdminLogin = () => {
                 'Content-Type': 'application/json',
             }
         });
-
-        if (response.status === 200) {
-            window.location.href = "/";
-        }
+        setUser(response.data);
+        navigate("/");
     };
 
     return (

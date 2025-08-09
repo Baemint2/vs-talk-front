@@ -7,7 +7,7 @@ import {useCategories} from "@/hooks/useCategories.tsx";
 import {usePosts} from "@/hooks/usePosts.tsx";
 
 interface SearchParams {
-    orderBy: 'desc' | 'asc';
+    orderBy: string;
     title?: string;
 }
 
@@ -27,7 +27,7 @@ const Home = () => {
     const { posts } = usePosts(searchParams, slug);
 
     // 정렬 변경 핸들러
-    const handleSortChange = (sortType: 'desc' | 'asc') => {
+    const handleSortChange = (sortType: string) => {
         setSearchParams(prev => ({
             ...prev,
             orderBy: sortType
@@ -133,15 +133,35 @@ const Home = () => {
                         >
                             최신순
                         </button>
+                        {/*<button*/}
+                        {/*    className={`px-4 py-2 text-sm rounded-lg transition-colors ${*/}
+                        {/*        searchParams.orderBy === 'hot'*/}
+                        {/*            ? 'bg-blue-500 text-white'*/}
+                        {/*            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'*/}
+                        {/*    }`}*/}
+                        {/*    onClick={() => handleSortChange('voteCount')}*/}
+                        {/*>*/}
+                        {/*    인기*/}
+                        {/*</button>*/}
                         <button
                             className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                                searchParams.orderBy === 'asc'
+                                searchParams.orderBy === 'vote'
                                     ? 'bg-blue-500 text-white'
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
-                            onClick={() => handleSortChange('asc')}
+                            onClick={() => handleSortChange('vote')}
                         >
-                            과거순
+                            투표수순
+                        </button>
+                        <button
+                            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                                searchParams.orderBy === 'endingSoon'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                            onClick={() => handleSortChange('endingSoon')}
+                        >
+                            마감임박
                         </button>
                     </div>
                 </div>
@@ -154,6 +174,8 @@ const Home = () => {
                             id={post.id}
                             title={post.title}
                             author={post.author}
+                            categoryName={post.categoryName}
+                            videoId={post.videoId}
                             updatedAt={post.updatedAt}
                             commentCount={post.commentCount}
                             likeCount={post.likeCount}

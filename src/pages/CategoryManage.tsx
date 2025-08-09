@@ -33,8 +33,12 @@ const CategoryManage = () => {
     const handleDeleteCategory = async (id: number) => {
         if (confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
             try {
-                await deleteCategory(id);
-            } catch (err) {
+                await deleteCategory(id)
+
+            } catch (err: any) {
+                if (err.response?.status === 400) {
+                    alert(err.response.data);
+                }
                 console.error('카테고리 삭제 실패:', err);
             }
         }
