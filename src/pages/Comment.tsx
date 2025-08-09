@@ -22,7 +22,7 @@ interface CommentType {
 const Comment = ({ postId }: CommentProps) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const { userInfo } = useAuth();
+  const { userInfo, isAuthenticated } = useAuth();
 
   useEffect(() => {
     fetchComments();
@@ -30,9 +30,10 @@ const Comment = ({ postId }: CommentProps) => {
 
   const fetchComments = async () => {
     try {
-      const response = await api.get(`comment/all/${postId}`);
+      const response = await api.get(`comments/${postId}`);
       const commentsData = response.data;
       console.log(commentsData);
+      console.log(isAuthenticated);
       // 중첩 구조로 변환
       const nestedComments = buildNestedComments(commentsData);
       setComments(nestedComments);
@@ -156,6 +157,7 @@ const Comment = ({ postId }: CommentProps) => {
                   postId={postId}
                   level={0}
                   userInfo={userInfo}
+                  isAuthenticated={isAuthenticated}
                   onCommentsChange={handleCommentsRefresh}
                   isDeleted={comment.deleted}
               />

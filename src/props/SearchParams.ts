@@ -1,4 +1,4 @@
 export interface SearchParams {
-    orderBy: 'desc' | 'asc';
+    orderBy: string;
     title?: string;
 }

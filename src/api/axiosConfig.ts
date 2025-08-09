@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
 // 응답 인터셉터 - 에러 처리
 api.interceptors.response.use(
     (response) => {
-        return response;
+        return response.data;
     },
     (error) => {
         return Promise.reject(error);

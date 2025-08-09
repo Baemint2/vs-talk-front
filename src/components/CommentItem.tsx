@@ -26,9 +26,10 @@ interface CommentItemProps {
     userInfo: UserInfo | null;
     onCommentsChange: () => void; // 댓글 변경 후 새로고침 콜백 (하나로 통합)
     isDeleted: boolean; // ✅ 추가
+    isAuthenticated: boolean;
 }
 
-const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: CommentItemProps) => {
+const CommentItem = ({comment, postId, level, userInfo, onCommentsChange, isAuthenticated}: CommentItemProps) => {
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [showEditForm, setShowEditForm] = useState(false);
@@ -43,7 +44,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
         if (replyText.trim() === '') return;
 
         try {
-            await api.post(`comment/add`, {
+            await api.post(`comments`, {
                 content: replyText,
                 postId: postId,
                 parentId: comment.id,
@@ -59,7 +60,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
 
     const handleDelete = async () => {
         try {
-            await api.delete(`comment/${comment.id}`);
+            await api.delete(`comments/${comment.id}`);
             onCommentsChange(); // 부모에게 새로고침 요청
         } catch (error) {
             console.error('댓글 삭제 실패:', error);
@@ -74,7 +75,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
         }
 
         try {
-            await api.put(`comment/${comment.id}`, {
+            await api.put(`comments/${comment.id}`, {
                 content: editText.trim()
             }, {
                 headers: {
@@ -136,7 +137,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
                             }`}>
                                 {comment.username}
                             </span>
-                            {level > 0 && (
+                            {level > 0 && isAuthenticated && (
                                 <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
                                     답글
                                 </span>
@@ -212,7 +213,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
                                 </>
                             )}
 
-                            {canReply && !isDeleted && (
+                            {canReply && !isDeleted && isAuthenticated && (
                                 <button
                                     onClick={() => setShowReplyForm(!showReplyForm)}
                                     className="text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
@@ -274,6 +275,7 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange}: Comme
                             postId={postId}
                             level={level + 1}
                             userInfo={userInfo}
+                            isAuthenticated={isAuthenticated}
                             onCommentsChange={onCommentsChange}
                             isDeleted={reply.deleted}
                         />

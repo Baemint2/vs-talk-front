@@ -16,6 +16,7 @@ export const usePosts = (params: SearchParams, slug?: string) => {
             if (params.title) apiUrl = `posts/search`;
 
             const response = await api.get(apiUrl, { params });
+            console.log(response.data);
             setPosts(response.data);
         } catch (err) {
             setError('게시글을 불러오는데 실패했습니다.');
