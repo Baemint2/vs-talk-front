@@ -1,12 +1,14 @@
 import {useState} from 'react';
 import api from "@/api/axiosConfig.ts";
-import {timeAgo} from "@/util/Time.ts";
+import {CommentHeader} from "@/components/comments/CommentHeader.tsx";
+import {CommentContent} from "@/components/comments/CommentContent.tsx";
 
 interface CommentType {
     id: number;
     content: string;
     postId: number;
     username: string;
+    nickname: string;
     parentId: number | null;
     updatedAt: string;
     replies?: CommentType[];
@@ -20,16 +22,23 @@ interface UserInfo {
 }
 
 interface CommentItemProps {
-    comment: CommentType;
-    postId: number;
-    level: number;
-    userInfo: UserInfo | null;
-    onCommentsChange: () => void; // 댓글 변경 후 새로고침 콜백 (하나로 통합)
-    isDeleted: boolean; // ✅ 추가
-    isAuthenticated: boolean;
+    comment: CommentType,
+    postId: number,
+    level: number,
+    userInfo: UserInfo | null,
+    onCommentsChange: () => void,
+    isDeleted: boolean,
+    isAuthenticated: boolean,
 }
 
-const CommentItem = ({comment, postId, level, userInfo, onCommentsChange, isAuthenticated}: CommentItemProps) => {
+const CommentItem = ({
+                         comment,
+                         postId,
+                         level,
+                         userInfo,
+                         onCommentsChange,
+                         isAuthenticated,
+                     }: CommentItemProps) => {
     const [showReplyForm, setShowReplyForm] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [showEditForm, setShowEditForm] = useState(false);
@@ -117,81 +126,25 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange, isAuth
                     : 'bg-gray-50 border-l-4 border-blue-200'
             } ${showEditForm ? 'ring-2 ring-orange-200' : ''}`}>
                 {/* 댓글 헤더 */}
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                        {/* 프로필 이미지 */}
-                        <div className={`${
-                            level === 0 ? 'w-8 h-8' : 'w-6 h-6'
-                        } bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0`}>
-                            <span className={`${
-                                level === 0 ? 'text-sm' : 'text-xs'
-                            } font-medium text-white`}>
-                                {comment.username.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-
-                        {/* 사용자명과 레벨 표시 */}
-                        <div className="flex items-center gap-2">
-                            <span className={`font-medium ${
-                                level === 0 ? 'text-gray-900' : 'text-gray-700'
-                            }`}>
-                                {comment.username}
-                            </span>
-                            {level > 0 && isAuthenticated && (
-                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
-                                    답글
-                                </span>
-                            )}
-                            {showEditForm && (
-                                <span className="text-xs px-2 py-1 bg-orange-100 text-orange-600 rounded-full">
-                                    수정 중
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    <span className="text-xs text-gray-500">
-                        {timeAgo(comment.updatedAt)}
-                    </span>
-                </div>
+                <CommentHeader
+                    level={level}
+                    nickname={comment.nickname}
+                    updatedAt={comment.updatedAt}
+                    isEditing={showEditForm}
+                    isAuthenticated={isAuthenticated && level > 0}
+                />
 
                 {/* 댓글 내용 또는 수정 폼 */}
                 <div className={`${level > 0 ? 'ml-9' : 'ml-11'}`}>
-                    {showEditForm ? (
-                        /* 수정 폼 */
-                        <div className="mb-3">
-                            <textarea
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                className="w-full p-3 border border-orange-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-orange-50"
-                                rows={3}
-                                autoFocus
-                                placeholder="댓글을 수정해주세요..."
-                            />
-                            <div className="flex justify-end gap-2 mt-2">
-                                <button
-                                    onClick={handleEditCancel}
-                                    className="px-3 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                                >
-                                    취소
-                                </button>
-                                <button
-                                    onClick={handleEditSubmit}
-                                    disabled={!editText.trim() || editText.trim() === comment.content}
-                                    className="px-3 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    수정 완료
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        /* 일반 댓글 내용 */
-                        <p className={`mb-3 ${
-                            level === 0 ? 'text-gray-900' : 'text-gray-700'
-                        }`}>
-                            {comment.content}
-                        </p>
-                    )}
+                    <CommentContent
+                        level={level}
+                        content={comment.content}
+                        editText={editText}
+                        setEditText={setEditText}
+                        showEditForm={showEditForm}
+                        onEditSubmit={handleEditSubmit}
+                        onEditCancel={handleEditCancel}
+                    />
 
                     {/* 액션 버튼들 - 수정 중이 아닐 때만 표시 */}
                     {!showEditForm && (
@@ -230,7 +183,8 @@ const CommentItem = ({comment, postId, level, userInfo, onCommentsChange, isAuth
             {showReplyForm && canReply && !showEditForm && (
                 <div className="mt-3 ml-11 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex gap-3 mb-3">
-                        <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div
+                            className="w-6 h-6 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-white">나</span>
                         </div>
                         <div className="flex-1">

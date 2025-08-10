@@ -5,10 +5,20 @@ interface Category {
     id: number;
     name: string;
     slug: string;
+    parentId: number | null;
+}
+
+export interface CategoryTree {
+    id: number;
+    name: string;
+    slug: string;
+    parentId: number | null;
+    children: CategoryTree[];
 }
 
 export const useCategories = () => {
     const [categories, setCategories] = useState<Category[]>([]);
+    const [categoryTree, setCategoryTree] = useState<CategoryTree[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -16,8 +26,10 @@ export const useCategories = () => {
         const fetchCategories = async () => {
             try {
                 setLoading(true);
-                const response = await api.get<Category[]>('categories');
-                setCategories(response.data);
+                const response = await api.get('categories');
+                const response1 = await api.get('categories/tree');
+                setCategories(response.data.data);
+                setCategoryTree(response1.data.data);
             } catch (err) {
                 setError('카테고리를 불러오는데 실패했습니다.');
                 console.error(err);
@@ -30,17 +42,18 @@ export const useCategories = () => {
     }, []);
 
     // 카테고리 추가 함수
-    const addCategory = async (name: string, slug: string) => {
+    const addCategory = async (name: string, slug: string, parentId: number | null) => {
         try {
             const newCategory = {
                 name,
                 slug: slug.toLowerCase(),
+                parentId: parentId === null ? null : parentId,
             };
 
-            const response = await api.post<Category>('categories', newCategory);
+            const response = await api.post('categories', newCategory);
 
             // 상태에 새 카테고리 추가
-            setCategories(prev => [...prev, response.data]);
+            setCategories(prev => [...prev, response.data.data]);
 
             return response.data;
         } catch (err) {
@@ -63,5 +76,5 @@ export const useCategories = () => {
     }
 
 
-    return { categories, loading, error, addCategory, deleteCategory };
+    return { categories: categories, categoryTree, loading, error, addCategory, deleteCategory };
 }

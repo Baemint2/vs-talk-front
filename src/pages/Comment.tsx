@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "@/api/axiosConfig.ts";
-import { useAuth } from "@/hooks/useAuth";
 import CommentItem from "@/components/CommentItem.tsx";
 import {check} from "korcen";
+import {useUser} from "@/components/UserContext.tsx";
 
 interface CommentProps {
   postId: number;
@@ -12,6 +12,7 @@ interface CommentType {
   id: number;
   content: string;
   postId: number;
+  nickname: string;
   username: string;
   parentId: number | null;
   updatedAt: string;
@@ -22,7 +23,7 @@ interface CommentType {
 const Comment = ({ postId }: CommentProps) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const { userInfo, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useUser();
 
   useEffect(() => {
     fetchComments();
@@ -90,7 +91,7 @@ const Comment = ({ postId }: CommentProps) => {
 
     if (check(inputValue)) return;
     try {
-      await api.post(`comment/add`, {
+      await api.post(`comments`, {
         content: inputValue,
         postId: postId,
         parentId: null,
@@ -156,7 +157,7 @@ const Comment = ({ postId }: CommentProps) => {
                   comment={comment}
                   postId={postId}
                   level={0}
-                  userInfo={userInfo}
+                  userInfo={user}
                   isAuthenticated={isAuthenticated}
                   onCommentsChange={handleCommentsRefresh}
                   isDeleted={comment.deleted}

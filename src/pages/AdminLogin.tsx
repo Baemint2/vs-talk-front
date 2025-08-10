@@ -7,7 +7,7 @@ const AdminLogin = () => {
 
     const [username, setUsername] = useState<string>("")
     const [password, setPassword] = useState<string>("")
-    const {setUser} = useUser();
+    const {setUser, refresh} = useUser();
     const navigate = useNavigate();
     const handleLogin = async () => {
         const data = {
@@ -22,6 +22,7 @@ const AdminLogin = () => {
         });
         setUser(response.data);
         navigate("/");
+        await refresh();
     };
 
     return (

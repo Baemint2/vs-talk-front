@@ -9,7 +9,7 @@ interface VoteProps {
     options: VoteOption[];
     isEditing?: boolean;
     postId?: number;
-    counts: VoteCount[];
+    counts?: VoteCount[];
     onVote?: (optionId: number | string) => void;
     onAddOption: (voteIndex: number, newOption: VoteOption) => void;
     onUpdateOption?: (voteIndex: number, optionId: number, newText: string) => void;
@@ -162,7 +162,7 @@ interface VoteOptionProps {
     voteEnabled?: boolean | false;
 }
 
-const VoteOptionItem = ({ option, isEditing, isVoted, voteCount, onUpdate, onRemove, onVote, canRemove, voteEnabled }: VoteOptionProps) => {
+const VoteOptionItem = ({ option, isEditing, voteCount, onUpdate, onRemove, onVote, canRemove, voteEnabled }: VoteOptionProps) => {
     const [isEditingText, setIsEditingText] = useState(false);
     const [editText, setEditText] = useState(option.optionText);
 
@@ -187,33 +187,27 @@ const VoteOptionItem = ({ option, isEditing, isVoted, voteCount, onUpdate, onRem
                     <Button size="sm" onClick={handleSave}>저장</Button>
                     <Button size="sm" variant="outline" onClick={() => setIsEditingText(false)}>취소</Button>
                 </div>
-            ) : isVoted ? (
+            ) : (
                 <div className="flex-1 relative">
                     <div className="bg-gray-200 rounded-2xl h-10" style={{ width: `${votePercentage}%` }} />
                     <div className="absolute top-0 left-0 w-full h-10 flex items-center justify-between px-3 cursor-pointer hover:bg-amber-100/20"
-                         onClick={() => voteEnabled ? onVote?.(option.id) : alert("종료된 투표입니다.")}>
+                         onClick={() => {
+                             if (isEditing) {
+                                 setIsEditingText(true);
+                             } else if (voteEnabled) {
+                                 onVote?.(option.id)
+                             } else {
+                                 alert("종료된 투표입니다.")
+                             }}}>
                         <span>{option.optionText}</span>
                         <span className="text-xs font-medium">({votePercentage.toFixed(1)}%)</span>
+                        {isEditing && (
+                            <Button variant="ghost" size="sm" onClick={() => setIsEditingText(true)}
+                                    className="opacity-0 group-hover:opacity-100 w-8 h-8 p-0 ml-2 hover:bg-blue-100">
+                                <Edit size={12} className="text-blue-500"/>
+                            </Button>
+                        )}
                     </div>
-                </div>
-            ) : (
-                <div className="flex-1 flex items-center justify-between">
-                    <span className="flex-1 p-1 cursor-pointer hover:bg-amber-100"
-                          onClick={() => {
-                              if (isEditing) {
-                                  setIsEditingText(true);
-                              } else if (voteEnabled) {
-                                  onVote?.(option.id);
-                              }
-                          }}>
-                        {option.optionText}
-                    </span>
-                    {isEditing && (
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditingText(true)}
-                                className="opacity-0 group-hover:opacity-100 w-8 h-8 p-0 ml-2 hover:bg-blue-100">
-                            <Edit size={12} className="text-blue-500"/>
-                        </Button>
-                    )}
                 </div>
             )}
             {isEditing && canRemove && !isEditingText && (
