@@ -69,10 +69,11 @@ const PostDetail = () => {
 
             try {
                 const postResponse = await api.get(`posts/${id}`);
-                setPost(postResponse.data);
+                setPost(postResponse.data.data);
 
                 const postsResponse = await api.get(`posts`);
-                const filteredPosts = postsResponse.data.filter((postItem: { id: number; }) => postItem.id !== Number(id));
+                console.log(postsResponse.data);
+                const filteredPosts = postsResponse.data.data.filter((postItem: { id: number; }) => postItem.id !== Number(id));
                 setPosts(filteredPosts);
 
             } catch (error) {

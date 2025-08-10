@@ -1,17 +1,13 @@
 import logo from '@/assets/logo2.png'
 import {useNavigate} from "react-router-dom";
 import {AlignJustify} from 'lucide-react';
-import {useUser} from "@/components/UserContext.tsx";
-
 interface HeaderProps {
     onMenuClick: () => void;
+    role: string | undefined;
 }
 
-const Header = ({onMenuClick}: HeaderProps) => {
-    const { user } = useUser();
-
+const Header = ({onMenuClick, role}: HeaderProps) => {
     const navigate = useNavigate();
-
     return (
         <header className="text-white h-20 border-b-2 border-b-gray-300" style={{backgroundColor: '#F9FAFB'}}>
             <div className="flex justify-between items-center">
@@ -19,7 +15,7 @@ const Header = ({onMenuClick}: HeaderProps) => {
                      alt="logo"
                      className="w-16 h-16 mt-2 rounded-xl"
                      onClick={() => navigate('/')}/>
-                { user?.role === 'ADMIN' ? <span onClick={onMenuClick}>
+                { role === 'ADMIN' ? <span onClick={onMenuClick}>
                     <AlignJustify size={30} className={"text-black mr-5"}/>
                 </span> : null}
             </div>

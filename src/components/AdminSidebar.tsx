@@ -1,6 +1,6 @@
 import {X, Users, BarChart3, Settings, Shield, MessageSquare, Tag, LogOut} from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
-import {useAuth} from "@/hooks/useAuth.tsx";
+import {useUser} from "@/components/UserContext.tsx";
 
 interface AdminSidebarProps {
     isOpen: boolean;
@@ -9,7 +9,7 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({isOpen, onClose}: AdminSidebarProps) => {
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout } = useUser();
 
     const menuItems = [
         {

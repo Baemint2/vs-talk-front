@@ -1,75 +1,114 @@
-import logo from '../assets/logo2.png'
+import logo from '../assets/logo2.png';
 import Post from "@/components/post/Post.tsx";
-import {useState} from "react";
-import {Search, X} from "lucide-react";
-import {useLocation, useParams} from "react-router-dom";
-import {useCategories} from "@/hooks/useCategories.tsx";
-import {usePosts} from "@/hooks/usePosts.tsx";
+import { useEffect, useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
+import { useLocation, useParams } from "react-router-dom";
+import { type CategoryTree, useCategories } from "@/hooks/useCategories.tsx";
+import { usePosts } from "@/hooks/usePosts.tsx";
+import { SortControls, type SortType } from "@/components/SortControls.tsx";
 
-interface SearchParams {
-    orderBy: string;
-    title?: string;
+function findBySlug(nodes: CategoryTree[], slug?: string): CategoryTree | undefined {
+    if (!slug) return undefined;
+    for (const n of nodes) {
+        if (n.slug === slug) return n;
+        const hit = findBySlug(n.children ?? [], slug);
+        if (hit) return hit;
+    }
+    return undefined;
+}
+
+// 한 파일 내에서 재사용하는 간단 탭 버튼
+function TabButton({
+                       active,
+                       onClick,
+                       children,
+                       tone = "blue",
+                   }: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+    tone?: "blue" | "indigo";
+}) {
+    const activeClass =
+        tone === "blue"
+            ? "bg-blue-600 text-white border-blue-600"
+            : "bg-indigo-600 text-white border-indigo-600";
+    const inactiveClass = "bg-white text-gray-700 border-gray-300";
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-pressed={active}
+            className={`px-3 py-1.5 rounded-full border text-sm ${active ? activeClass : inactiveClass}`}
+        >
+            {children}
+        </button>
+    );
 }
 
 const Home = () => {
     const location = useLocation();
     const params = useParams();
-    const { categories } = useCategories();
+    const { categoryTree } = useCategories();
+
     const [searchInput, setSearchInput] = useState<string>('');
-    const [searchParams, setSearchParams] = useState<SearchParams>({
-        orderBy: 'desc' // 기본값: 최신순
+    const [searchParams, setSearchParams] = useState<{ orderBy: SortType; title?: string }>({
+        orderBy: "desc",
     });
 
     const isCategoryPage = location.pathname.startsWith('/category/');
-    const slug = params.slug;
-    const currentCategory = categories.find(cat => cat.slug === slug);
+    const slug = params.slug as string | undefined;
 
-    const { posts } = usePosts(searchParams, slug);
+    const currentCategory = useMemo(
+        () => findBySlug(categoryTree, slug),
+        [categoryTree, slug]
+    );
 
-    // 정렬 변경 핸들러
-    const handleSortChange = (sortType: string) => {
-        setSearchParams(prev => ({
-            ...prev,
-            orderBy: sortType
-        }));
-    };
+    // 탭 상태
+    const [childSlug, setChildSlug] = useState<string>("");
+    const [grandSlug, setGrandSlug] = useState<string>("");
 
-    // 검색 실행
+    // 부모 카테고리 변경 시 하위 선택 초기화
+    useEffect(() => {
+        setChildSlug("");
+        setGrandSlug("");
+    }, [slug]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const childCategories = currentCategory?.children ?? [];
+    const selectedChild = useMemo(
+        () => (childSlug ? childCategories.find(c => c.slug === childSlug) : undefined),
+        [childCategories, childSlug]
+    );
+    const grandChildCategories = selectedChild?.children ?? [];
+
+    // 어떤 슬러그로 글을 조회할지 결정 (손자 > 자식 > 부모)
+    const effectiveSlug = (grandSlug || childSlug || slug) as string | undefined;
+
+    const { posts } = usePosts(searchParams, effectiveSlug);
+
+    // 검색
     const handleSearch = () => {
-        setSearchParams(prev => ({
-            ...prev,
-            title: searchInput
-        }));
+        setSearchParams(prev => ({ ...prev, title: searchInput }));
     };
-
-    // 검색 초기화
     const handleClearSearch = () => {
         setSearchInput('');
-        setSearchParams(prev => ({
-            ...prev,
-            title: undefined
-        }));
+        setSearchParams(prev => ({ ...prev, title: undefined }));
     };
-
-    // Enter 키 핸들링
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') handleSearch();
     };
-
-    // 현재 검색 중인지 확인
-    const isSearching = searchParams.title && searchParams.title.trim() !== '';
+    const isSearching = !!(searchParams.title && searchParams.title.trim() !== '');
 
     return (
-        <div className="min-h-screen bg-gray-50" >
-            {/* 헤더 섹션 */}
+        <div className="min-h-screen bg-gray-50">
+            {/* 헤더 */}
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-6xl mx-auto px-4 py-6">
                     <div className="flex flex-col items-center gap-6">
                         {!isCategoryPage && (
                             <div className="flex flex-col items-center gap-4">
-                                <img src={logo} alt="logo" className="w-16 h-16 rounded-xl"/>
+                                <img src={logo} alt="logo" className="w-16 h-16 rounded-xl" />
                             </div>
                         )}
                         {isCategoryPage && currentCategory && (
@@ -83,7 +122,7 @@ const Home = () => {
                                 placeholder="게시글 검색..."
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
-                                onKeyPress={handleKeyPress}
+                                onKeyDown={handleKeyPress}
                             />
                             {isSearching && (
                                 <button
@@ -91,7 +130,7 @@ const Home = () => {
                                     className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                                     title="검색 초기화"
                                 >
-                                    <X size={16} className="text-gray-500"/>
+                                    <X size={16} className="text-gray-500" />
                                 </button>
                             )}
                             <button
@@ -99,9 +138,72 @@ const Home = () => {
                                 className="pr-4 hover:bg-gray-200 p-3 rounded-r-full transition-colors"
                                 type="button"
                             >
-                                <Search size={20} className="text-gray-600"/>
+                                <Search size={20} className="text-gray-600" />
                             </button>
                         </div>
+
+                        {/* ▼ 계층형 카테고리 탭 (모바일 가로 스크롤) */}
+                        {isCategoryPage && currentCategory && (
+                            <div className="w-full max-w-6xl flex flex-col gap-2">
+                                {/* 1뎁스: 자식 */}
+                                {childCategories.length > 0 && (
+                                    <div className="overflow-x-auto">
+                                        <div className="flex gap-2 whitespace-nowrap">
+                                            <TabButton
+                                                active={!childSlug}
+                                                onClick={() => {
+                                                    setChildSlug("");
+                                                    setGrandSlug("");
+                                                }}
+                                                tone="blue"
+                                            >
+                                                전체
+                                            </TabButton>
+
+                                            {childCategories.map((c) => (
+                                                <TabButton
+                                                    key={c.id}
+                                                    active={childSlug === c.slug}
+                                                    onClick={() => {
+                                                        setChildSlug(c.slug);
+                                                        setGrandSlug("");
+                                                    }}
+                                                    tone="blue"
+                                                >
+                                                    {c.name}
+                                                </TabButton>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 2뎁스: 손자 (자식 선택 시에만 표시) */}
+                                {selectedChild && grandChildCategories.length > 0 && (
+                                    <div className="overflow-x-auto">
+                                        <div className="flex gap-2 whitespace-nowrap">
+                                            <TabButton
+                                                active={!grandSlug}
+                                                onClick={() => setGrandSlug("")}
+                                                tone="indigo"
+                                            >
+                                                {selectedChild.name} 전체
+                                            </TabButton>
+
+                                            {grandChildCategories.map((gc) => (
+                                                <TabButton
+                                                    key={gc.id}
+                                                    active={grandSlug === gc.slug}
+                                                    onClick={() => setGrandSlug(gc.slug)}
+                                                    tone="indigo"
+                                                >
+                                                    {gc.name}
+                                                </TabButton>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -122,51 +224,13 @@ const Home = () => {
                             </button>
                         )}
                     </div>
-                    <div className="flex gap-2">
-                        <button
-                            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                                searchParams.orderBy === 'desc'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                            onClick={() => handleSortChange('desc')}
-                        >
-                            최신순
-                        </button>
-                        {/*<button*/}
-                        {/*    className={`px-4 py-2 text-sm rounded-lg transition-colors ${*/}
-                        {/*        searchParams.orderBy === 'hot'*/}
-                        {/*            ? 'bg-blue-500 text-white'*/}
-                        {/*            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'*/}
-                        {/*    }`}*/}
-                        {/*    onClick={() => handleSortChange('voteCount')}*/}
-                        {/*>*/}
-                        {/*    인기*/}
-                        {/*</button>*/}
-                        <button
-                            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                                searchParams.orderBy === 'vote'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                            onClick={() => handleSortChange('vote')}
-                        >
-                            투표수순
-                        </button>
-                        <button
-                            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                                searchParams.orderBy === 'endingSoon'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                            onClick={() => handleSortChange('endingSoon')}
-                        >
-                            마감임박
-                        </button>
-                    </div>
+                    <SortControls
+                        value={searchParams.orderBy}
+                        onChange={(v) => setSearchParams(prev => ({ ...prev, orderBy: v }))}
+                    />
                 </div>
 
-                {/* 그리드 레이아웃 */}
+                {/* 그리드 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {posts.map(post => (
                         <Post
@@ -189,10 +253,7 @@ const Home = () => {
                             {isSearching ? '검색 결과가 없습니다' : '게시글이 없습니다'}
                         </div>
                         <p className="text-gray-500">
-                            {isSearching
-                                ? '다른 검색어를 시도해보세요'
-                                : '첫 번째 게시글을 작성해보세요!'
-                            }
+                            {isSearching ? '다른 검색어를 시도해보세요' : '첫 번째 게시글을 작성해보세요!'}
                         </p>
                     </div>
                 )}

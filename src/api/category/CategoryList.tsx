@@ -1,43 +1,37 @@
 import {useCategories} from "@/hooks/useCategories.tsx";
+import {useMemo} from "react";
+import {flattenForSelect} from "@/util/category/flattenForSelect.ts";
+import {Select, SelectItem, SelectValue} from "@/components/ui/select.tsx";
+import {SelectContent, SelectTrigger} from "@radix-ui/react-select";
 
 interface CategoryProps {
     value?: number;
-    onChange: (categoryId: number) => void;
+    onChange: (id: number | undefined) => void;
 }
 
-const CategoryList = ({value, onChange}: CategoryProps) => {
-
-    const { categories, loading, error } = useCategories();
-
-    const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const categoryId = parseInt(event.target.value);
-        if (categoryId) {
-            onChange(categoryId);
-        }
-    };
-
+const CategoryList = ({ value, onChange }: CategoryProps) => {
+    const { categoryTree, loading, error } = useCategories();
+    const options = useMemo(() => flattenForSelect(categoryTree), [categoryTree]);
 
     if (loading) return <div>로딩 중...</div>;
-    if (error) return <div>에러: {error}</div>;
+    if (error)   return <div>에러: {String(error)}</div>;
 
     return (
-        <div>
-            <select
-                value={value || ''}
-                onChange={handleCategoryChange}
-            >
-            <option value="">카테고리 선택</option>
-                {loading && <option disabled>로딩 중...</option>}
-                {error && <option disabled>에러 발생</option>}
-                {categories.map(category => (
-                    <option key={category.id}
-                            value={category.id}
-                            >
-                        {category.name}
-                    </option>
+        <Select
+            value={value === undefined ? "" : String(value)}
+            onValueChange={(v) => onChange(v === "" ? undefined : Number(v))}  // ✅ 핵심
+        >
+            <SelectTrigger className="w-64">
+                <SelectValue placeholder="카테고리 선택" />
+            </SelectTrigger>
+            <SelectContent className="bg-black text-white">
+                {options.map((o) => (
+                    <SelectItem key={o.id} value={String(o.id)}>
+                        {o.label}
+                    </SelectItem>
                 ))}
-            </select>
-        </div>
+            </SelectContent>
+        </Select>
     );
 };
 

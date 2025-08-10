@@ -23,10 +23,15 @@ api.interceptors.request.use((config) => {
 // 응답 인터셉터 - 에러 처리
 api.interceptors.response.use(
     (response) => {
-        return response.data;
+        return response;
     },
-    (error) => {
-        return Promise.reject(error);
+    (err) => {
+        if (err.response?.status === 401) {
+            // 에러로 던지지 말고 정상 resolve
+            console.log("resolve")
+            return Promise.resolve(err.response);
+        }
+        return Promise.reject(err);
     }
 );
 

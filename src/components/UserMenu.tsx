@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { CircleUser } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth.tsx";
+import {useUser} from "@/components/UserContext.tsx";
 
 const UserMenu = () => {
     const [open, setOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout } = useUser();
 
     // ✅ 메뉴 외부 클릭 시 닫기
     useEffect(() => {
