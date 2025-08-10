@@ -1,6 +1,6 @@
 import {X, Users, BarChart3, Settings, Shield, MessageSquare, Tag, LogOut} from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
-import {useUser} from "@/components/UserContext.tsx";
+import {useUser} from "@/store/UserContext.tsx";
 
 interface AdminSidebarProps {
     isOpen: boolean;

@@ -6,7 +6,7 @@ import Post from "@/components/post/Post.tsx";
 import api from "@/api/axiosConfig.ts";
 import type {PostProps} from "@/props/PostProps.tsx";
 import type {VoteOption} from "@/props/VoteOptionProps.tsx";
-import LazyYouTube from "@/components/LazyYoutube.tsx";
+import LazyYouTube from "@/components/common/LazyYoutube.tsx";
 import VoteChart from "@/components/vote/VoteCharts.tsx";
 
 interface PostDetailData {

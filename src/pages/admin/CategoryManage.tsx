@@ -1,11 +1,11 @@
 // pages/CategoryManage.tsx
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories } from "@/hooks/useCategories.tsx";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
+import { Input } from "@/components/ui/input.tsx";
 
-import CategoryRow from "@/components/category/CategoryRow";
+import CategoryRow from "@/components/category/CategoryRow.tsx";
 
 export default function CategoryManage() {
     const { categories, categoryTree, addCategory, deleteCategory, loading } = useCategories();

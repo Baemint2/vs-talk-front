@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CircleUser } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {useUser} from "@/components/UserContext.tsx";
+import {useUser} from "@/store/UserContext.tsx";
 
 const UserMenu = () => {
     const [open, setOpen] = useState(false);

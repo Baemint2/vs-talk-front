@@ -4,11 +4,11 @@ import Home from '@/pages/Home';
 import PostDetail from '@/pages/PostDetail.tsx';
 import MainLayout from '@/layouts/MainLayout';
 import Login from './pages/Login';
-import AdminLogin from "@/pages/AdminLogin.tsx";
-import Admin from './pages/Admin';
-import {UserProvider} from "@/components/UserContext.tsx";
-import CategoryManage from "@/pages/CategoryManage";
-import PostManage from "@/pages/PostManage.tsx";
+import AdminLogin from "@/pages/admin/AdminLogin.tsx";
+import Admin from './pages/admin/Admin.tsx';
+import {UserProvider} from "@/store/UserContext.tsx";
+import CategoryManage from "@/pages/admin/CategoryManage.tsx";
+import PostManage from "@/pages/admin/PostManage.tsx";
 import EditPost from "@/components/post/EditPost.tsx";
 
 const router = createBrowserRouter([

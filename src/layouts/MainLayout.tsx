@@ -1,11 +1,11 @@
-import Header from '../components/Header.js';
-import Footer from '../components/Footer.js';
+import Header from '../components/layout/Header.tsx';
+import Footer from '../components/layout/Footer.tsx';
 import {Outlet, useLocation} from 'react-router-dom';
-import UserSidebar from "../components/UserSidebar.tsx";
+import UserSidebar from "../components/layout/UserSidebar.tsx";
 import {useState} from "react";
-import ScrollToTop from '@/components/ScrollToTop.ts';
-import AdminSidebar from "@/components/AdminSidebar.tsx";
-import {useUser} from "@/components/UserContext.tsx";
+import ScrollToTop from '@/components/common/ScrollToTop.ts';
+import AdminSidebar from "@/components/layout/AdminSidebar.tsx";
+import {useUser} from "@/store/UserContext.tsx";
 
 const MainLayout = () => {
     const { isAuthenticated, user } = useUser(); //

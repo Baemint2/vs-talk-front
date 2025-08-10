@@ -1,6 +1,6 @@
 import {useNavigate} from "react-router-dom";
 import {CirclePlus, House, AlignJustify} from "lucide-react";
-import UserMenu from "@/components/UserMenu.tsx";
+import UserMenu from "@/components/layout/UserMenu.tsx";
 
 interface FooterProps {
     onMenuClick: () => void;

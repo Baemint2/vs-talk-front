@@ -6,7 +6,7 @@ import React, {
     useState,
     type ReactNode,
 } from "react";
-import api from "@/api/axiosConfig"; // axios 인스턴스 (withCredentials=true 등 설정된 것)
+import api from "@/api/axiosConfig.ts"; // axios 인스턴스 (withCredentials=true 등 설정된 것)
 
 export interface IUser {
     id: number;
