@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import api from "@/api/axiosConfig";
-import PostForm, {type PostData } from "@/components/post/PostForm";
+import api from "@/api/axiosConfig.ts";
+import PostForm, {type PostData } from "@/components/post/PostForm.tsx";
 
 export default function Admin() {
     const navigate = useNavigate();

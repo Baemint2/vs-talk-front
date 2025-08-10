@@ -5,7 +5,7 @@ import { Search, X } from "lucide-react";
 import { useLocation, useParams } from "react-router-dom";
 import { type CategoryTree, useCategories } from "@/hooks/useCategories.tsx";
 import { usePosts } from "@/hooks/usePosts.tsx";
-import { SortControls, type SortType } from "@/components/SortControls.tsx";
+import { SortControls, type SortType } from "@/components/common/SortControls.tsx";
 
 function findBySlug(nodes: CategoryTree[], slug?: string): CategoryTree | undefined {
     if (!slug) return undefined;

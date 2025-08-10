@@ -1,4 +1,4 @@
-import {SortButton} from "@/components/SortButton.tsx";
+import {SortButton} from "@/components/common/SortButton.tsx";
 
 export type SortType = "desc" | "vote" | "endingSoon";
 const SORT_OPTIONS: {key: SortType; label: string}[] = [

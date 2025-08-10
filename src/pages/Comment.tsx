@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "@/api/axiosConfig.ts";
-import CommentItem from "@/components/CommentItem.tsx";
+import CommentItem from "@/components/comments/CommentItem.tsx";
 import {check} from "korcen";
-import {useUser} from "@/components/UserContext.tsx";
+import {useUser} from "@/store/UserContext.tsx";
 
 interface CommentProps {
   postId: number;

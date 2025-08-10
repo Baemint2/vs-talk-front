@@ -270,7 +270,10 @@ export default function PostForm({ mode, initialData, onSubmit, onRemoveOption }
             <Card className="w-full">
                 <CardHeader><CardTitle>카테고리 선택</CardTitle></CardHeader>
                 <CardContent>
-                    <CategoryList value={selectedCategoryId || undefined} onChange={setSelectedCategoryId} />
+                    <CategoryList
+                        value={selectedCategoryId ?? undefined}
+                        onChange={(id?: number) => setSelectedCategoryId(id ?? null)}
+                    />
                 </CardContent>
             </Card>
 

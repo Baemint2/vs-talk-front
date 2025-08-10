@@ -1,7 +1,7 @@
 import {useState} from "react";
 import api from "@/api/axiosConfig.ts";
 import {useNavigate} from "react-router-dom";
-import {useUser} from "@/components/UserContext.tsx";
+import {useUser} from "@/store/UserContext.tsx";
 
 const AdminLogin = () => {
 
