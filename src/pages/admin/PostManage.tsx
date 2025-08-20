@@ -5,23 +5,27 @@ import api from "@/api/axiosConfig.ts";
 import {useNavigate} from "react-router-dom";
 
 const PostManage = (params: SearchParams) => {
-    const { posts, refetch } = usePosts(params);
+    const {posts, refetchFirstPage} = usePosts(params);
     const navigate = useNavigate();
 
     const handleDeletePost = async (id: number) => {
         // confirm 창 추가하기
         await api.delete(`posts/${id}`)
-        await refetch();
+        await refetchFirstPage();
     };
 
     const handleUpdatePost = (id: number) => {
         navigate('/post/update/' + id);
     };
 
+    const handleAddPost = () => {
+        navigate('/post/add');
+    }
+
     return <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-lg font-medium text-gray-900">게시글 관리</h3>
-            <Button onClick={() => console.log('게시글을 추가합니다.')}
+            <Button onClick={() => handleAddPost()}
                     className="border-2 border-solid border-gray-300 text-2xl"
             >
                 새 게시글 추가
@@ -41,7 +45,7 @@ const PostManage = (params: SearchParams) => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         작성자
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider" colSpan={2}>
                         편집
                     </th>
                 </tr>
@@ -62,15 +66,15 @@ const PostManage = (params: SearchParams) => {
                                 {post.author}
                             </div>
                         </td>
-                        <td className="px-1 py-2 whitespace-nowrap">
-                            <div className="text-xs font-medium text-gray-900 border border-solid border-gray-300 rounded-lg p-1">
-                                <Button onClick={() => handleUpdatePost(post.id)}>
-                                    수정
-                                </Button>
-                                <Button onClick={() => handleDeletePost(post.id)}>
-                                    삭제
-                                </Button>
-                            </div>
+                        <td className="px-3 py-3 text-black">
+                            <Button onClick={() => handleUpdatePost(post.id)}>
+                                수정
+                            </Button>
+                        </td>
+                        <td className="px-3 py-3 text-black">
+                            <Button onClick={() => handleDeletePost(post.id)}>
+                                삭제
+                            </Button>
                         </td>
                     </tr>
                 ))}

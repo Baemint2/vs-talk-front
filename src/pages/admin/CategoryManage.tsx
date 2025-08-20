@@ -6,6 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input.tsx";
 
 import CategoryRow from "@/components/category/CategoryRow.tsx";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogHeader, AlertDialogCancel, AlertDialogAction, AlertDialogFooter
+} from "@/components/ui/alert-dialog.tsx";
 
 export default function CategoryManage() {
     const { categories, categoryTree, addCategory, deleteCategory, loading } = useCategories();
@@ -14,10 +21,15 @@ export default function CategoryManage() {
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [parentId, setParentId] = useState<number | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+    const [validationAlertOpen, setValidationAlertOpen] = useState(false);
+    const [errorAlertOpen, setErrorAlertOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const handleAddCategory = async () => {
         if (!name.trim() || !slug.trim()) {
-            alert("한글명/영문명(슬러그)를 입력해주세요.");
+            setValidationAlertOpen(true);
             return;
         }
         try {
@@ -29,18 +41,34 @@ export default function CategoryManage() {
             location.reload();
         } catch (e) {
             console.error(e);
-            alert("카테고리 추가 실패");
+            setErrorMessage("카테고리 추가 실패");
+            setErrorAlertOpen(true);
         }
     };
 
-    const handleDeleteCategory = async (id: number) => {
-        if (!confirm("정말로 이 카테고리를 삭제하시겠습니까?")) return;
+
+    const handleDeleteCategory = (id: number) => {
+        setCategoryToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteCategory = async () => {
+        if (categoryToDelete === null) return;
+
         try {
-            await deleteCategory(id);
-        } catch (err: any) {
-            alert(err?.response?.data || "카테고리 삭제 실패");
+            await deleteCategory(categoryToDelete);
+            setDeleteConfirmOpen(false);
+            setCategoryToDelete(null);
+        } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            setErrorMessage(err?.response?.data || "카테고리 삭제 실패");
+            setErrorAlertOpen(true);
+            setDeleteConfirmOpen(false);
+            setCategoryToDelete(null);
         }
     };
+
 
     return (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -87,7 +115,7 @@ export default function CategoryManage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">ID</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">카테고리명</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">영문명</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">편집</th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500" colSpan={2}>편집</th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
@@ -118,6 +146,56 @@ export default function CategoryManage() {
                     </tbody>
                 </table>
             </div>
+
+            {/* 입력 검증 알림 다이얼로그 */}
+            <AlertDialog open={validationAlertOpen} onOpenChange={setValidationAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>입력 오류</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            한글명/영문명(슬러그)를 입력해주세요.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction>확인</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>카테고리 삭제</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            정말로 이 카테고리를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setCategoryToDelete(null)}>
+                            취소
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDeleteCategory}
+                        >
+                            삭제
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={errorAlertOpen} onOpenChange={setErrorAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>오류</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {errorMessage}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction>확인</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

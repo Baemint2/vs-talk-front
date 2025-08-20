@@ -1,24 +1,22 @@
-import naverLogin from "@/assets/btnG_official.png";
+import naverLogin from "@/assets/btnG_Korean.png";
 import kakaoLogin from "@/assets/kakao_login_medium_narrow.png";
 import googleLogin from "@/assets/web_light_sq_SI@2x.png";
 
 const Login = () => {
 
     const handleLogin = (provider: string) => {
-        window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
+        window.location.href = `https://www.vstalk.com/oauth2/authorization/${provider}`;
     }
 
     return (
         <div className="flex flex-col items-center justify-center gap-4">
             <h1 className="text-3xl font-bold text-center mb-5">간편 로그인</h1>
-            <img id="kakao-login"
-                 src={kakaoLogin}
+            <img src={kakaoLogin}
                  alt="카카오 로그인"
                  className="w-8/12"
                  onClick={() => handleLogin("kakao")}
             />
-            <img id="naver-login"
-                 src={naverLogin}
+            <img src={naverLogin}
                  alt="네이버 로그인"
                  className="w-8/12"
                  onClick={() => handleLogin("naver")}

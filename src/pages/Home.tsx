@@ -1,6 +1,6 @@
 import logo from '../assets/logo2.png';
 import Post from "@/components/post/Post.tsx";
-import { useEffect, useMemo, useState } from "react";
+import {useEffect, useMemo, useState} from "react";
 import { Search, X } from "lucide-react";
 import { useLocation, useParams } from "react-router-dom";
 import { type CategoryTree, useCategories } from "@/hooks/useCategories.tsx";
@@ -85,8 +85,7 @@ const Home = () => {
     // 어떤 슬러그로 글을 조회할지 결정 (손자 > 자식 > 부모)
     const effectiveSlug = (grandSlug || childSlug || slug) as string | undefined;
 
-    const { posts } = usePosts(searchParams, effectiveSlug);
-
+    const { posts, hasNext, loadMoreRef } = usePosts(searchParams, effectiveSlug, 20);
     // 검색
     const handleSearch = () => {
         setSearchParams(prev => ({ ...prev, title: searchInput }));
@@ -240,11 +239,14 @@ const Home = () => {
                             author={post.author}
                             categoryName={post.categoryName}
                             videoId={post.videoId}
-                            updatedAt={post.updatedAt}
+                            createdAt={post.createdAt}
                             commentCount={post.commentCount}
-                            likeCount={post.likeCount}
+                            voteCount={post.voteCount}
+                            voteEndTime={post.voteEndTime}
+                            voteEnabled={post.voteEnabled}
                         />
                     ))}
+                    {hasNext && <div ref={loadMoreRef} style={{ height: 1 }} />}
                 </div>
 
                 {posts.length === 0 && (

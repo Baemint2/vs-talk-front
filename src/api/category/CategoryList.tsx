@@ -19,12 +19,12 @@ const CategoryList = ({ value, onChange }: CategoryProps) => {
     return (
         <Select
             value={value === undefined ? "" : String(value)}
-            onValueChange={(v) => onChange(v === "" ? undefined : Number(v))}  // ✅ 핵심
+            onValueChange={(v) => onChange(v === "" ? undefined : Number(v))}
         >
-            <SelectTrigger className="w-64">
+            <SelectTrigger>
                 <SelectValue placeholder="카테고리 선택" />
             </SelectTrigger>
-            <SelectContent className="bg-black text-white">
+            <SelectContent className="bg-black text-white z-50" position="popper">
                 {options.map((o) => (
                     <SelectItem key={o.id} value={String(o.id)}>
                         {o.label}

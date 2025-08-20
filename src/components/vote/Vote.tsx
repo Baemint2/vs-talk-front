@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input.tsx";
 import { X, Plus, Edit } from 'lucide-react';
 import type { VoteOption } from "@/props/VoteOptionProps.tsx";
 import api from "@/api/axiosConfig.ts";
+import {toast} from "sonner";
+import {useUser} from "@/store/UserContext.tsx";
+import LoginPromptDialog from "@/components/common/LoginPromptDialog.tsx";
 
 interface VoteProps {
     options: VoteOption[];
@@ -25,11 +28,13 @@ interface VoteCount {
 }
 
 const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAddOption, onUpdateOption, onRemoveOption, voteIndex, voteEnabled, voteEndTime }: VoteProps) => {
+    const { user } = useUser();
     const [voteOptions, setVoteOptions] = useState<VoteOption[]>(initialOptions);
     const [voteCount, setVoteCount] = useState<VoteCount[]>([]);
     const [newOptionText, setNewOptionText] = useState('');
     const [isVoted, setIsVoted] = useState(false);
     const didFetch = useRef(false);
+    const [validationAlertOpen, setValidationAlertOpen] = useState(false);
 
     // ✅ 부모에서 내려온 옵션이 변할 때만 반영
     useEffect(() => {
@@ -100,6 +105,12 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAd
     };
 
     const handleVote = async (optionId: number | string) => {
+        if (!user) {
+            setValidationAlertOpen(true);
+
+            return;
+        }
+
         try {
             await onVote?.(optionId);
             await fetchVoteCount();
@@ -145,6 +156,13 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAd
                     </div>
                 )}
             </div>
+            {/* 입력 검증 알림 다이얼로그 */}
+            <LoginPromptDialog
+                open={validationAlertOpen}
+                onOpenChange={setValidationAlertOpen}
+                title="🗳️ 투표 참여"
+                description={"투표 참여는 로그인이 필요한 서비스입니다. \n 로그인 후 다양한 투표에 참여해보세요!"}
+            />
         </div>
     );
 };
@@ -197,10 +215,10 @@ const VoteOptionItem = ({ option, isEditing, voteCount, onUpdate, onRemove, onVo
                              } else if (voteEnabled) {
                                  onVote?.(option.id)
                              } else {
-                                 alert("종료된 투표입니다.")
+                                 toast.info("종료된 투표입니다.")
                              }}}>
                         <span>{option.optionText}</span>
-                        <span className="text-xs font-medium">({votePercentage.toFixed(1)}%)</span>
+                        {!isEditing && <span className="text-xs font-medium">({votePercentage.toFixed(1)}%)</span>}
                         {isEditing && (
                             <Button variant="ghost" size="sm" onClick={() => setIsEditingText(true)}
                                     className="opacity-0 group-hover:opacity-100 w-8 h-8 p-0 ml-2 hover:bg-blue-100">

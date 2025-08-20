@@ -11,5 +11,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <style>
+      html[data-scroll-locked],
+      body[data-scroll-locked],
+      html body[data-scroll-locked][style*="margin-right"]:not(#_) {
+        margin-right: 0 !important;
+        padding-right: 0 !important;
+        overflow: auto !important;
+      }
+    </style>
   </body>
 </html>
