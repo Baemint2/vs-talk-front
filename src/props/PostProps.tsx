@@ -3,9 +3,12 @@ export interface PostProps {
     title: string;
     author: string;
     videoId?: string;
-    updatedAt: string;
+    createdAt: string;
     thumbnailUrl?: string;
     commentCount?: number;
     likeCount?: number;
     categoryName: string;
+    voteEndTime: string;
+    voteEnabled: boolean;
+    voteCount?: number;
 }

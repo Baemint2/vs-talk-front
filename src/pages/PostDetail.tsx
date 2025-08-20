@@ -8,6 +8,7 @@ import type {PostProps} from "@/props/PostProps.tsx";
 import type {VoteOption} from "@/props/VoteOptionProps.tsx";
 import LazyYouTube from "@/components/common/LazyYoutube.tsx";
 import VoteChart from "@/components/vote/VoteCharts.tsx";
+import ShareButton from "@/components/common/ShareButton";
 
 interface PostDetailData {
     id: number;
@@ -73,7 +74,7 @@ const PostDetail = () => {
 
                 const postsResponse = await api.get(`posts`);
                 console.log(postsResponse.data);
-                const filteredPosts = postsResponse.data.data.filter((postItem: { id: number; }) => postItem.id !== Number(id));
+                const filteredPosts = postsResponse.data.content.filter((postItem: { id: number; }) => postItem.id !== Number(id));
                 setPosts(filteredPosts);
 
             } catch (error) {
@@ -143,6 +144,13 @@ const PostDetail = () => {
                             onAddOption={() => {}}
                         />
                     </div>
+                    <div className="fixed bottom-20 right-4 z-10">
+                        <ShareButton
+                            url={`${window.location.origin}/post/${post.id}`}
+                            title={post.title}
+                            variant="floating" // 둥근 버튼 스타일
+                        />
+                    </div>
                 </div>
 
                 <Comment postId={post.id}/>
@@ -159,9 +167,11 @@ const PostDetail = () => {
                                 id={post.id}
                                 title={post.title}
                                 author={post.author}
-                                updatedAt={post.updatedAt}
+                                createdAt={post.createdAt}
+                                voteEndTime={post.voteEndTime}
                                 commentCount={post.commentCount}
                                 categoryName={post.categoryName}
+                                voteEnabled={post.voteEnabled}
                             />
                         ))}
                     </div>

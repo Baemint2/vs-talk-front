@@ -10,6 +10,7 @@ import {UserProvider} from "@/store/UserContext.tsx";
 import CategoryManage from "@/pages/admin/CategoryManage.tsx";
 import PostManage from "@/pages/admin/PostManage.tsx";
 import EditPost from "@/components/post/EditPost.tsx";
+import { Toaster } from 'sonner';
 
 const router = createBrowserRouter([
     {
@@ -60,7 +61,16 @@ const router = createBrowserRouter([
 function App() {
     return <UserProvider>
             <RouterProvider router={router}/>
-          </UserProvider>;
+        <Toaster
+            position="top-center"
+            richColors
+            toastOptions={{
+                style: {
+                    top: '40vh', // 뷰포트 높이의 40% 지점
+                }
+            }}
+        />
+    </UserProvider>;
 }
 
 export default App;

@@ -1,70 +1,117 @@
-// Post.tsx 업데이트 제안
+// Post.tsx (리팩터링)
 import { useNavigate } from "react-router-dom";
-import { Clock, MessageCircle, Heart } from "lucide-react";
-import {timeAgo} from "@/util/Time.ts";
+import { Calendar as CalendarIcon, MessageCircle, BarChart3, Play } from "lucide-react";
+import { timeAgo } from "@/util/Time.ts";
+import clsx from "clsx";
 
 interface PostProps {
     id: number;
     title: string;
     author: string;
-    videoId?: string;
-    updatedAt: string;
+    videoId?: string | null;
+    createdAt: string;
     commentCount?: number;
-    likeCount?: number;
-    thumbnail?: string;
+    voteCount?: number;
+    thumbnail?: string | null; // 있으면 우선 사용, 없으면 videoId로 유튜브 썸네일
     categoryName: string;
+    voteEndTime?: string | null;
+    voteEnabled: boolean;
+    closed?: boolean; // 선택: 서버에서 내려주면 [종료] 판단에 사용
 }
 
-const Post = ({ id, title, videoId, updatedAt, commentCount = 0, likeCount = 0, categoryName }: PostProps) => {
+const Post = ({
+                  id,
+                  title,
+                  videoId,
+                  createdAt,
+                  commentCount = 0,
+                  voteCount = 0,
+                  thumbnail,
+                  categoryName,
+                  voteEndTime,
+                  voteEnabled,
+                  closed,
+              }: PostProps) => {
     const navigate = useNavigate();
+    const hasVideo = Boolean(videoId);
+    const imgSrc =
+        thumbnail ??
+        (hasVideo ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null);
 
-    const handleClick = () => {
-        navigate(`/post/${id}`);
-    };
+    const isClosed = closed ?? !voteEnabled;
+    const endDate =
+        voteEnabled && voteEndTime
+            ? `(~${voteEndTime.substring(5, 10).replace("-", "/")})`
+            : "";
+
+    const handleClick = () => navigate(`/post/${id}`);
 
     return (
-        <div
+        <article
             onClick={handleClick}
-            className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 cursor-pointer group"
+            className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleClick()}
         >
-            {/* 썸네일 (있을 경우) */}
-            {videoId && (
-                <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
+            {/* 항상 16:9 미디어 슬롯 확보 → 레이아웃 안정 */}
+            <div className={clsx("relative w-full overflow-hidden bg-zinc-100", "aspect-[16/9]")}>
+                {imgSrc ? (
                     <img
-                        src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                        alt="YouTube Thumbnail"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        src={imgSrc}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
                     />
-                </div>
-            )}
+                ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                        <Play className="h-8 w-8 opacity-30" />
+                    </div>
+                )}
+            </div>
 
-            <div className="p-4">
-                {/* 제목 */}
-                <h3 className="font-semibold text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors mb-2">
-                    [{categoryName}] {title}
+            {/* 본문 */}
+            <div className="flex min-h-0 flex-1 flex-col gap-2 p-4">
+                {/* 상단 라인: 카테고리/상태/마감 */}
+                <div className="flex items-center gap-2 text-sm">
+          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-700">
+            {categoryName}
+          </span>
+                    {isClosed && (
+                        <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-700">
+              종료된 투표
+            </span>
+                    )}
+                    {voteEnabled && voteEndTime && (
+                        <span className="ml-auto text-zinc-500">{endDate}</span>
+                    )}
+                </div>
+
+                {/* 제목: 2줄 고정 */}
+                <h3 className="line-clamp-2 text-base font-semibold text-zinc-900 transition-colors group-hover:text-blue-600">
+                    {title}
                 </h3>
 
-                {/* 메타 정보 */}
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                    <div className="flex items-center gap-1">
-                        <Clock size={14} />
-                        <span>{timeAgo(updatedAt)}</span>
-                    </div>
+                {/* 시간 */}
+                <div className="mt-1 flex items-center gap-2 text-sm text-zinc-500">
+                    <CalendarIcon className="h-4 w-4" />
+                    <span>{timeAgo(createdAt)}</span>
                 </div>
 
-                {/* 상호작용 정보 */}
-                <div className="flex items-center gap-4 text-sm text-gray-400">
+                {/* 메타: 하단 고정 */}
+                <div className="mt-auto flex items-center gap-4 text-sm text-zinc-500">
                     <div className="flex items-center gap-1">
-                        <MessageCircle size={14} />
+                        <MessageCircle className="h-4 w-4" />
                         <span>{commentCount}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                        <Heart size={14} />
-                        <span>{likeCount}</span>
+                        <BarChart3 className="h-4 w-4" />
+                        <span>{voteCount}</span>
                     </div>
                 </div>
             </div>
-        </div>
+        </article>
     );
 };
 

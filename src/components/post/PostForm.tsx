@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import YouTube, { type YouTubeProps } from "react-youtube";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
     Dialog,
@@ -55,8 +55,9 @@ export default function PostForm({ mode, initialData, onSubmit, onRemoveOption }
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
         initialData?.categoryId || null
     );
-    const [selectedDate, setDate] = React.useState<Date | undefined>(new Date())
-    const [selectedHour, setSelectedHour] = useState<number>(12);
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const [selectedDate, setDate] = React.useState<Date | undefined>(tomorrow)
+    const [selectedHour, setSelectedHour] = useState<number>(tomorrow.getHours());
     const [selectedMinute, setSelectedMinute] = useState<number>(0);
 
     const opts: YouTubeProps["opts"] = { width: "400", height: "300" };
@@ -200,7 +201,6 @@ export default function PostForm({ mode, initialData, onSubmit, onRemoveOption }
                         <Button variant="outline" onClick={createVote}>+ 투표 추가하기</Button>
                     ) : (
                         <div className="flex flex-col items-center gap-4">
-                            {/* 👇 여기 div 추가됨 */}
                             {votes.map((vote, index) => (
                                 <Vote
                                     key={vote.id}
@@ -214,7 +214,7 @@ export default function PostForm({ mode, initialData, onSubmit, onRemoveOption }
                                 />
                             ))}
                             투표 종료 시간 설정하기
-                            <div className="flex flex-col items-center gap-4 p-4 rounded-lg border border-gray-200 bg-white shadow-sm w-full max-w-md">
+                            <div className="flex flex-col items-center gap-4 p-4 rounded-lg border shadow-sm w-full max-w-md">
                                 <div className="flex items-center gap-2">
                                     <label htmlFor="time-picker" className="text-sm font-medium text-gray-700 w-24">
                                         시간 선택
@@ -246,14 +246,12 @@ export default function PostForm({ mode, initialData, onSubmit, onRemoveOption }
                                         </Select>
                                     </div>
                                 </div>
-                                <div>
                                     <Calendar
                                         mode="single"
                                         selected={selectedDate}
                                         onSelect={setDate}
-                                        className="rounded-lg border"
+                                        className="rounded-lg border shadow-sm"
                                     />
-                                </div>
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">

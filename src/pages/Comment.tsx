@@ -3,6 +3,7 @@ import api from "@/api/axiosConfig.ts";
 import CommentItem from "@/components/comments/CommentItem.tsx";
 import {check} from "korcen";
 import {useUser} from "@/store/UserContext.tsx";
+import LoginPromptDialog from "@/components/common/LoginPromptDialog.tsx";
 
 interface CommentProps {
   postId: number;
@@ -24,6 +25,7 @@ const Comment = ({ postId }: CommentProps) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [inputValue, setInputValue] = useState('');
   const { user, isAuthenticated } = useUser();
+  const [validationAlertOpen, setValidationAlertOpen] = useState(false);
 
   useEffect(() => {
     fetchComments();
@@ -87,6 +89,13 @@ const Comment = ({ postId }: CommentProps) => {
 
   // 새 댓글 추가
   const addComment = async () => {
+    if (!user) {
+      setValidationAlertOpen(true);
+
+      return;
+    }
+
+
     if (inputValue.trim() === '') return;
 
     if (check(inputValue)) return;
@@ -164,6 +173,14 @@ const Comment = ({ postId }: CommentProps) => {
               />
           ))}
         </div>
+
+        {/* 입력 검증 알림 다이얼로그 */}
+        <LoginPromptDialog
+            open={validationAlertOpen}
+            onOpenChange={setValidationAlertOpen}
+            title="💬 댓글 작성"
+            description={`댓글 작성은 로그인이 필요한 서비스입니다. \n 로그인 후 다른 사용자들과 소통해보세요!`}
+        />
       </div>
   );
 };
