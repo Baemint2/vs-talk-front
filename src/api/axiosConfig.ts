@@ -27,8 +27,6 @@ api.interceptors.response.use(
     },
     (err) => {
         if (err.response?.status === 401) {
-            // 에러로 던지지 말고 정상 resolve
-            console.log("resolve")
             return Promise.resolve(err.response);
         }
         return Promise.reject(err);

@@ -1,15 +1,17 @@
 import type {CategoryTree} from "@/hooks/useCategories.tsx";
 import {useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
+import {Edit} from "lucide-react";
 
 interface CategoryRowProps {
     node: CategoryTree;
     depth: number;
     onAdd: (id: number) => void;
+    onEdit: (node: CategoryTree) => void;
     onDelete: (id: number) => void;
 }
 
-const CategoryRow = ({ node, depth, onAdd, onDelete, }: CategoryRowProps) => {
+const CategoryRow = ({ node, depth, onAdd, onEdit, onDelete, }: CategoryRowProps) => {
         const [open, setOpen] = useState(true);
         const hasChildren = node.children?.length > 0;
 
@@ -41,6 +43,17 @@ const CategoryRow = ({ node, depth, onAdd, onDelete, }: CategoryRowProps) => {
                         </Button>
                     </td>
                     <td className="px-3 py-3 text-black">
+                        <Button
+                            onClick={() => onEdit(node)}
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                        >
+                            <Edit className="h-3 w-3 mr-1" />
+                            수정
+                        </Button>
+                    </td>
+                    <td className="px-3 py-3 text-black">
                         <Button onClick={() => onDelete(node.id)}>
                             삭제
                         </Button>
@@ -49,7 +62,12 @@ const CategoryRow = ({ node, depth, onAdd, onDelete, }: CategoryRowProps) => {
 
                 {open &&
                     node.children?.map((child) => (
-                        <CategoryRow key={child.id} node={child} depth={depth + 1} onAdd={onAdd} onDelete={onDelete} />
+                        <CategoryRow key={child.id}
+                                     node={child}
+                                     depth={depth + 1}
+                                     onAdd={onAdd}
+                                     onEdit={onEdit}
+                                     onDelete={onDelete} />
                     ))}
             </>
         );

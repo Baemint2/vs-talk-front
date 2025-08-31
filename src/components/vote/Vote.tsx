@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { X, Plus, Edit } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { VoteOption } from "@/props/VoteOptionProps.tsx";
 import api from "@/api/axiosConfig.ts";
-import {toast} from "sonner";
 import {useUser} from "@/store/UserContext.tsx";
 import LoginPromptDialog from "@/components/common/LoginPromptDialog.tsx";
+import VoteOptionItem from "@/components/vote/VoteOptionItem.tsx";
+import Quiz from "@/components/quiz/Quiz.tsx";
 
 interface VoteProps {
     options: VoteOption[];
     isEditing?: boolean;
     postId?: number;
+    categoryId?: number;
     counts?: VoteCount[];
     onVote?: (optionId: number | string) => void;
     onAddOption: (voteIndex: number, newOption: VoteOption) => void;
@@ -27,7 +29,7 @@ interface VoteCount {
     count: number;
 }
 
-const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAddOption, onUpdateOption, onRemoveOption, voteIndex, voteEnabled, voteEndTime }: VoteProps) => {
+const Vote = ({ options: initialOptions, postId, categoryId, onVote, isEditing = false, onAddOption, onUpdateOption, onRemoveOption, voteIndex, voteEnabled, voteEndTime }: VoteProps) => {
     const { user } = useUser();
     const [voteOptions, setVoteOptions] = useState<VoteOption[]>(initialOptions);
     const [voteCount, setVoteCount] = useState<VoteCount[]>([]);
@@ -35,6 +37,7 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAd
     const [isVoted, setIsVoted] = useState(false);
     const didFetch = useRef(false);
     const [validationAlertOpen, setValidationAlertOpen] = useState(false);
+    const [showQuiz, setShowQuiz] = useState(false);
 
     // ✅ 부모에서 내려온 옵션이 변할 때만 반영
     useEffect(() => {
@@ -115,6 +118,12 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAd
             await onVote?.(optionId);
             await fetchVoteCount();
             await fetchIsVoted(true);
+
+            // 투표 성공 후 퀴즈 표시
+            setTimeout(() => {
+                setShowQuiz(true);
+            }, 1000); // 투표 결과가 업데이트된 후 1초 지연시간
+
         } catch (error) {
             console.error('투표 처리 실패:', error);
         }
@@ -156,6 +165,18 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAd
                     </div>
                 )}
             </div>
+
+            {/* 퀴즈 섹션 */}
+            {showQuiz && !isEditing && (
+                <div className="mt-8 animate-fade-in">
+                    <div className="text-lg font-semibold mb-4 text-center">
+                        📝 투표하신 주제에 대한 퀴즈가 있습니다!
+                    </div>
+                    {/* 퀴즈 컴포넌트 렌더링 */}
+                    <Quiz open={showQuiz} onOpenChange={setShowQuiz} categoryId={categoryId} />
+                </div>
+            )}
+
             {/* 입력 검증 알림 다이얼로그 */}
             <LoginPromptDialog
                 open={validationAlertOpen}
@@ -163,77 +184,6 @@ const Vote = ({ options: initialOptions, postId, onVote, isEditing = false, onAd
                 title="🗳️ 투표 참여"
                 description={"투표 참여는 로그인이 필요한 서비스입니다. \n 로그인 후 다양한 투표에 참여해보세요!"}
             />
-        </div>
-    );
-};
-
-// ✅ 옵션 단일 컴포넌트
-interface VoteOptionProps {
-    option: VoteOption;
-    isEditing?: boolean;
-    onUpdate: (optionId: number, newText: string) => void;
-    onRemove: (optionId: number) => void;
-    onVote?: (optionId: number | string) => void;
-    voteCount?: VoteCount[];
-    isVoted?: boolean;
-    canRemove: boolean;
-    voteEnabled?: boolean | false;
-}
-
-const VoteOptionItem = ({ option, isEditing, voteCount, onUpdate, onRemove, onVote, canRemove, voteEnabled }: VoteOptionProps) => {
-    const [isEditingText, setIsEditingText] = useState(false);
-    const [editText, setEditText] = useState(option.optionText);
-
-    useEffect(() => setEditText(option.optionText), [option.optionText]);
-
-    const handleSave = () => {
-        if (editText.trim() && editText !== option.optionText) onUpdate(option.id, editText.trim());
-        setIsEditingText(false);
-    };
-
-    const myVoteCount = voteCount?.find(v => v.voteOptionId === option.id)?.count || 0;
-    const totalVotes = voteCount?.reduce((s, v) => s + v.count, 0) || 0;
-    const votePercentage = totalVotes > 0 ? (myVoteCount / totalVotes) * 100 : 0;
-
-    return (
-        <div className="flex items-center bg-amber-50 rounded-2xl w-full max-w-md mb-3 p-2 relative group">
-            {isEditing && isEditingText ? (
-                <div className="flex-1 flex items-center gap-2">
-                    <Input value={editText} onChange={(e) => setEditText(e.target.value)}
-                           onKeyDown={(e) => e.key === 'Enter' ? handleSave() : e.key === 'Escape' && setIsEditingText(false)}
-                           className="flex-1" autoFocus />
-                    <Button size="sm" onClick={handleSave}>저장</Button>
-                    <Button size="sm" variant="outline" onClick={() => setIsEditingText(false)}>취소</Button>
-                </div>
-            ) : (
-                <div className="flex-1 relative">
-                    <div className="bg-gray-200 rounded-2xl h-10" style={{ width: `${votePercentage}%` }} />
-                    <div className="absolute top-0 left-0 w-full h-10 flex items-center justify-between px-3 cursor-pointer hover:bg-amber-100/20"
-                         onClick={() => {
-                             if (isEditing) {
-                                 setIsEditingText(true);
-                             } else if (voteEnabled) {
-                                 onVote?.(option.id)
-                             } else {
-                                 toast.info("종료된 투표입니다.")
-                             }}}>
-                        <span>{option.optionText}</span>
-                        {!isEditing && <span className="text-xs font-medium">({votePercentage.toFixed(1)}%)</span>}
-                        {isEditing && (
-                            <Button variant="ghost" size="sm" onClick={() => setIsEditingText(true)}
-                                    className="opacity-0 group-hover:opacity-100 w-8 h-8 p-0 ml-2 hover:bg-blue-100">
-                                <Edit size={12} className="text-blue-500"/>
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            )}
-            {isEditing && canRemove && !isEditingText && (
-                <Button variant="ghost" size="sm" onClick={() => onRemove(option.id)}
-                        className="opacity-0 group-hover:opacity-100 w-8 h-8 p-0 ml-2 hover:bg-red-100">
-                    <X size={12} className="text-red-500"/>
-                </Button>
-            )}
         </div>
     );
 };

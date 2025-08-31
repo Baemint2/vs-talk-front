@@ -15,7 +15,6 @@ interface VoteChartProps {
 }
 
 export default function VoteChart({ options, counts }: VoteChartProps) {
-    console.log('VoteChart data:', options, counts);
 
     const data = useMemo(() => {
         const map = new Map(counts.map(c => [c.voteOptionId, c.count]));
@@ -27,8 +26,6 @@ export default function VoteChart({ options, counts }: VoteChartProps) {
             // CSS 변수로 다시 시도하려면 아래 주석 해제
             fill: `hsl(var(--chart-${(index % 5) + 1}))`,
         }));
-
-        console.log('Chart rows with fill:', rows); // ✅ fill 값 확인용
 
         const total = rows.reduce((s, r) => s + r.count, 0);
         return {

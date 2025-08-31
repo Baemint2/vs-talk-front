@@ -35,8 +35,6 @@ const Comment = ({ postId }: CommentProps) => {
     try {
       const response = await api.get(`comments/${postId}`);
       const commentsData = response.data;
-      console.log(commentsData);
-      console.log(isAuthenticated);
       // 중첩 구조로 변환
       const nestedComments = buildNestedComments(commentsData);
       setComments(nestedComments);

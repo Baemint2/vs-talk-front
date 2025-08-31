@@ -16,6 +16,8 @@ export const usePosts = (params: SearchParams, slug?: string, pageSize = 20) => 
     const [error, setError] = useState<string | null>(null);
     const [hasNext, setHasNext] = useState(true);
 
+    const prevParamsRef = useRef<string>("");
+
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
     // 가드용 ref
@@ -66,10 +68,18 @@ export const usePosts = (params: SearchParams, slug?: string, pageSize = 20) => 
                 if (slug) apiUrl = `posts/category/${slug}`;
                 if (params.title) apiUrl = "posts/search";
 
+                const currentParams = JSON.stringify({ params, slug, pageSize });
+
+                if (prevParamsRef.current === currentParams) {
+                    return;
+                }
+
+                // ✅ 파라미터 업데이트
+                prevParamsRef.current = currentParams;
+
                 const { data: res } = await api.get<SliceResponse<PostProps>>(apiUrl, {
                     params: { ...params, page: pageToLoad, size: pageSize },
                 });
-                console.log(res.content);
                 const pageItems = res.content ?? [];
                 // (선택) 투표수 병합
                 let merged = pageItems;
@@ -94,7 +104,6 @@ export const usePosts = (params: SearchParams, slug?: string, pageSize = 20) => 
                 }
 
                 setPosts((prev) => [...prev, ...merged]);
-
                 // hasNext 계산
                 const noMore = (res.content?.length ?? 0) < pageSize ;
                 setHasNext(!noMore);

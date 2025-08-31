@@ -63,6 +63,22 @@ export const useCategories = () => {
         }
     };
 
+    const updateCategory = async (id: number, data: { name: string; slug: string; parentId: number | null }) => {
+        try {
+            const response = await api.put(`categories/${id}`, {
+                name: data.name,
+                slug: data.slug.toLowerCase(),
+                parentId: data.parentId
+            });
+
+            return response.data;
+        } catch (err) {
+            setError('카테고리 수정에 실패했습니다.');
+            console.error(err);
+            throw err;
+        }
+    };
+
     const deleteCategory = async (id: number) => {
         try {
             await api.delete(`categories/${id}`);
@@ -76,5 +92,5 @@ export const useCategories = () => {
     }
 
 
-    return { categories: categories, categoryTree, loading, error, addCategory, deleteCategory };
+    return { categories: categories, categoryTree, loading, error, addCategory, updateCategory, deleteCategory };
 }

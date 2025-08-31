@@ -1,31 +1,66 @@
 // pages/CategoryManage.tsx
-import { useCategories } from "@/hooks/useCategories.tsx";
-import { useState } from "react";
-import { Button } from "@/components/ui/button.tsx";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import {type CategoryTree, useCategories} from "@/hooks/useCategories.tsx";
+import {
+    type Key,
+    type ReactElement,
+    type ReactNode,
+    type ReactPortal,
+    useMemo,
+    useState
+} from "react";
+import {Button} from "@/components/ui/button.tsx";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog.tsx";
+import {Input} from "@/components/ui/input.tsx";
 
 import CategoryRow from "@/components/category/CategoryRow.tsx";
 import {
     AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
     AlertDialogContent,
-    AlertDialogTitle,
     AlertDialogDescription,
-    AlertDialogHeader, AlertDialogCancel, AlertDialogAction, AlertDialogFooter
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
 } from "@/components/ui/alert-dialog.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {flattenForSelect, flattenForSelectExcluding} from "@/util/category/flattenForSelect.ts";
 
 export default function CategoryManage() {
-    const { categories, categoryTree, addCategory, deleteCategory, loading } = useCategories();
+    const {categories, categoryTree, addCategory, updateCategory, deleteCategory, loading} = useCategories();
 
     const [open, setOpen] = useState(false);
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
     const [parentId, setParentId] = useState<number | null>(null);
+
+    // ✅ 수정 관련 state
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState<CategoryTree | null>(null);
+    const [editName, setEditName] = useState("");
+    const [editSlug, setEditSlug] = useState("");
+    const [editParentId, setEditParentId] = useState<number | null>(null);
+
+
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
     const [validationAlertOpen, setValidationAlertOpen] = useState(false);
     const [errorAlertOpen, setErrorAlertOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+
+    // ✅ 선택 옵션들 - flattenForSelect 활용
+    const editParentOptions = useMemo(() => {
+        return editingCategory
+            ? flattenForSelectExcluding(categoryTree, editingCategory.id)
+            : flattenForSelect(categoryTree);
+    }, [categoryTree, editingCategory]);
 
     const handleAddCategory = async () => {
         if (!name.trim() || !slug.trim()) {
@@ -46,6 +81,55 @@ export default function CategoryManage() {
         }
     };
 
+    // ✅ 수정 함수들
+    const handleEditCategory = (category: CategoryTree) => {
+        setEditingCategory(category);
+        setEditName(category.name);
+        setEditSlug(category.slug);
+        setEditParentId(category.parentId);
+        setEditOpen(true);
+    };
+
+    const handleUpdateCategory = async () => {
+        if (!editingCategory || !editName.trim() || !editSlug.trim()) {
+            setValidationAlertOpen(true);
+            return;
+        }
+
+        // 자기 자신을 부모로 설정하려는 경우 방지
+        if (editParentId === editingCategory.id) {
+            setErrorMessage("자기 자신을 부모 카테고리로 설정할 수 없습니다.");
+            setErrorAlertOpen(true);
+            return;
+        }
+
+        try {
+            await updateCategory(editingCategory.id, {
+                name: editName.trim(),
+                slug: editSlug.trim().toLowerCase(),
+                parentId: editParentId
+            });
+
+            setEditOpen(false);
+            setEditingCategory(null);
+            setEditName("");
+            setEditSlug("");
+            setEditParentId(null);
+            location.reload();
+        } catch (e) {
+            console.error(e);
+            setErrorMessage("카테고리 수정 실패");
+            setErrorAlertOpen(true);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditOpen(false);
+        setEditingCategory(null);
+        setEditName("");
+        setEditSlug("");
+        setEditParentId(null);
+    };
 
     const handleDeleteCategory = (id: number) => {
         setCategoryToDelete(id);
@@ -100,13 +184,70 @@ export default function CategoryManage() {
                                 placeholder="영문명(슬러그)을 입력해주세요 (예: sports)"
                             />
 
-                            <Button type="button" onClick={handleAddCategory} className="border-2 border-solid border-gray-300">
+                            <Button type="button" onClick={handleAddCategory}
+                                    className="border-2 border-solid border-gray-300">
                                 추가
                             </Button>
                         </DialogHeader>
                     </DialogContent>
                 </Dialog>
             </div>
+
+            {/* ✅ 수정 다이얼로그 */}
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>카테고리 수정</DialogTitle>
+                        <DialogDescription>
+                            {editingCategory?.name} 카테고리를 수정합니다
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">카테고리명</label>
+                            <Input
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                placeholder="한글명을 입력해주세요"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">영문명 (슬러그)</label>
+                            <Input
+                                value={editSlug}
+                                onChange={(e) => setEditSlug(e.target.value)}
+                                placeholder="영문명(슬러그)을 입력해주세요"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">부모 카테고리</label>
+                            <Select
+                                value={editParentId ? String(editParentId) : ""}
+                                onValueChange={(value) => setEditParentId(value === "" ? null : Number(value))}
+                            >
+                                {/* ✅ SelectTrigger 추가 */}
+                                <SelectTrigger>
+                                    <SelectValue placeholder="부모 카테고리 선택 (선택사항)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {editParentOptions.map((option: { id: Key | null | undefined; label: string | number | bigint | boolean | ReactElement | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
+                                        <SelectItem key={option.id} value={String(option.id)}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                자기 자신과 하위 카테고리는 부모로 선택할 수 없습니다
+                            </p>
+                        </div>
+                        <div className="flex gap-2 pt-4">
+                            <Button variant="outline" onClick={handleCancelEdit} className="flex-1">취소</Button>
+                            <Button onClick={handleUpdateCategory} className="flex-1">수정</Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -140,6 +281,7 @@ export default function CategoryManage() {
                                              setParentId(id)
                                              setOpen(true)
                                          }}
+                                         onEdit={handleEditCategory}
                                          onDelete={handleDeleteCategory} />
                         ))
                     )}

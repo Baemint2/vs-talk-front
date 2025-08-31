@@ -20,8 +20,6 @@ const ShareButton = ({ url, title, className = "", variant = "default" }: ShareB
         } else {
             // 클립보드 복사
             await navigator.clipboard.writeText(url);
-            // 토스트 메시지 표시
-            console.log("링크가 복사되었습니다!");
         }
     };
 
