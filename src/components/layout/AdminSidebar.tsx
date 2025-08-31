@@ -39,8 +39,8 @@ const AdminSidebar = ({isOpen, onClose}: AdminSidebarProps) => {
         },
         {
             icon: <Settings size={20}/>,
-            label: '시스템 설정',
-            path: '/admin/settings'
+            label: '엑셀 업로드',
+            path: '/admin/excel-upload'
         },
     ];
 

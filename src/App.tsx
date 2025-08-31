@@ -11,6 +11,7 @@ import CategoryManage from "@/pages/admin/CategoryManage.tsx";
 import PostManage from "@/pages/admin/PostManage.tsx";
 import EditPost from "@/components/post/EditPost.tsx";
 import { Toaster } from 'sonner';
+import ExcelUpload from "@/components/post/ExcelUpload.tsx";
 
 const router = createBrowserRouter([
     {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
             {
                 path: 'admin/posts',
                 element: <PostManage orderBy={'desc'}/>
+            },
+            {
+                path: 'admin/excel-upload',
+                element: <ExcelUpload />
             },
             {
                 path: 'post/:id',

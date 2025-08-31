@@ -19,7 +19,6 @@ export default function Admin() {
             });
 
             // 2xx일 때만 여기 실행
-            console.log("게시글 등록 성공", response.data);
             navigate(`/post/${response.data.data}`);
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment

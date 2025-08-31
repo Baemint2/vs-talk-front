@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Calendar as CalendarIcon, MessageCircle, BarChart3, Play } from "lucide-react";
 import { timeAgo } from "@/util/Time.ts";
 import clsx from "clsx";
+import MiniVoteChart from "@/components/vote/MiniVoteChart.tsx";
+import type { VoteCount } from "@/pages/PostDetail";
+import type {VoteOption} from "@/props/VoteOptionProps.tsx";
 
 interface PostProps {
     id: number;
@@ -17,6 +20,10 @@ interface PostProps {
     voteEndTime?: string | null;
     voteEnabled: boolean;
     closed?: boolean; // 선택: 서버에서 내려주면 [종료] 판단에 사용
+    // ✅ 투표 데이터 추가
+    voteOptionList?: VoteOption[];
+    voteCounts?: VoteCount[];
+    showMiniChart?: boolean; // 미니 차트 표시 여부
 }
 
 const Post = ({
@@ -31,6 +38,9 @@ const Post = ({
                   voteEndTime,
                   voteEnabled,
                   closed,
+                  voteOptionList = [],
+                  voteCounts = [],
+                  showMiniChart = true
               }: PostProps) => {
     const navigate = useNavigate();
     const hasVideo = Boolean(videoId);
@@ -46,6 +56,9 @@ const Post = ({
 
     const handleClick = () => navigate(`/post/${id}`);
 
+    // ✅ 투표 데이터가 있는지 확인
+    const hasVoteData = voteOptionList?.length > 0 && voteCounts?.length > 0;
+
     return (
         <article
             onClick={handleClick}
@@ -54,7 +67,6 @@ const Post = ({
             tabIndex={0}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleClick()}
         >
-            {/* 항상 16:9 미디어 슬롯 확보 → 레이아웃 안정 */}
             <div className={clsx("relative w-full overflow-hidden bg-zinc-100", "aspect-[16/9]")}>
                 {imgSrc ? (
                     <img
@@ -92,6 +104,16 @@ const Post = ({
                 <h3 className="line-clamp-2 text-base font-semibold text-zinc-900 transition-colors group-hover:text-blue-600">
                     {title}
                 </h3>
+
+                {/* ✅ 미니 차트 영역 */}
+                {showMiniChart && hasVoteData && (
+                    <div className="bg-gray-50 rounded-lg p-2 border">
+                        <MiniVoteChart
+                            options={voteOptionList}
+                            counts={voteCounts}
+                        />
+                    </div>
+                )}
 
                 {/* 시간 */}
                 <div className="mt-1 flex items-center gap-2 text-sm text-zinc-500">

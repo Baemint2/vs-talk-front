@@ -55,9 +55,9 @@ export default function PostForm({ mode, initialData, onSubmit, onRemoveOption }
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
         initialData?.categoryId || null
     );
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const [selectedDate, setDate] = React.useState<Date | undefined>(tomorrow)
-    const [selectedHour, setSelectedHour] = useState<number>(tomorrow.getHours());
+    const week = new Date(Date.now() + 24 * 60 * 60 * 1000 * 7);
+    const [selectedDate, setDate] = React.useState<Date | undefined>(week)
+    const [selectedHour, setSelectedHour] = useState<number>(week.getHours());
     const [selectedMinute, setSelectedMinute] = useState<number>(0);
 
     const opts: YouTubeProps["opts"] = { width: "400", height: "300" };

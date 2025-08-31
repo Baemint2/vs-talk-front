@@ -6,6 +6,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { type CategoryTree, useCategories } from "@/hooks/useCategories.tsx";
 import { usePosts } from "@/hooks/usePosts.tsx";
 import { SortControls, type SortType } from "@/components/common/SortControls.tsx";
+import PostSkeleton from "@/components/post/PostSkeleton.tsx";
 
 function findBySlug(nodes: CategoryTree[], slug?: string): CategoryTree | undefined {
     if (!slug) return undefined;
@@ -85,7 +86,9 @@ const Home = () => {
     // 어떤 슬러그로 글을 조회할지 결정 (손자 > 자식 > 부모)
     const effectiveSlug = (grandSlug || childSlug || slug) as string | undefined;
 
-    const { posts, hasNext, loadMoreRef } = usePosts(searchParams, effectiveSlug, 20);
+    const { posts, hasNext, loadMoreRef, loading } = usePosts(searchParams, effectiveSlug, 20);
+
+    console.log(posts);
     // 검색
     const handleSearch = () => {
         setSearchParams(prev => ({ ...prev, title: searchInput }));
@@ -141,10 +144,8 @@ const Home = () => {
                             </button>
                         </div>
 
-                        {/* ▼ 계층형 카테고리 탭 (모바일 가로 스크롤) */}
                         {isCategoryPage && currentCategory && (
                             <div className="w-full max-w-6xl flex flex-col gap-2">
-                                {/* 1뎁스: 자식 */}
                                 {childCategories.length > 0 && (
                                     <div className="overflow-x-auto">
                                         <div className="flex gap-2 whitespace-nowrap">
@@ -176,7 +177,6 @@ const Home = () => {
                                     </div>
                                 )}
 
-                                {/* 2뎁스: 손자 (자식 선택 시에만 표시) */}
                                 {selectedChild && grandChildCategories.length > 0 && (
                                     <div className="overflow-x-auto">
                                         <div className="flex gap-2 whitespace-nowrap">
@@ -207,12 +207,11 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* 게시글 목록 */}
             <div className="max-w-6xl mx-auto px-4 py-8">
                 <div className="mb-6 flex justify-between items-center">
                     <div className="flex flex-col gap-1">
                         <h3 className="text-lg font-semibold text-gray-700">
-                            {isSearching ? `"${searchParams.title}" 검색 결과` : '최근 게시글'} ({posts.length})
+                            {isSearching ? `"${searchParams.title}" 검색 결과` : '게시글 목록'}
                         </h3>
                         {isSearching && (
                             <button
@@ -231,34 +230,34 @@ const Home = () => {
 
                 {/* 그리드 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {posts.map(post => (
-                        <Post
-                            key={post.id}
-                            id={post.id}
-                            title={post.title}
-                            author={post.author}
-                            categoryName={post.categoryName}
-                            videoId={post.videoId}
-                            createdAt={post.createdAt}
-                            commentCount={post.commentCount}
-                            voteCount={post.voteCount}
-                            voteEndTime={post.voteEndTime}
-                            voteEnabled={post.voteEnabled}
-                        />
-                    ))}
-                    {hasNext && <div ref={loadMoreRef} style={{ height: 1 }} />}
+                    {loading ? (
+                        // ✅ 스켈레톤 UI 표시 (12개)
+                        Array.from({ length: 12 }).map((_, index) => (
+                            <PostSkeleton key={index} />
+                        ))
+                    ) : (
+                        // ✅ 실제 게시글 데이터 표시
+                        posts.map(post => (
+                            <Post
+                                key={post.id}
+                                id={post.id}
+                                title={post.title}
+                                author={post.author}
+                                categoryName={post.categoryName}
+                                videoId={post.videoId}
+                                createdAt={post.createdAt}
+                                commentCount={post.commentCount}
+                                voteCount={post.voteCount}
+                                voteEndTime={post.voteEndTime}
+                                voteEnabled={post.voteEnabled}
+                                voteOptionList={post.voteOptionList}
+                                voteCounts={post.voteCounts}
+                                showMiniChart={true} // 홈에서는 미니 차트 표시
+                            />
+                        ))
+                    )}
+                    {!loading && hasNext && <div ref={loadMoreRef} style={{ height: 1 }} />}
                 </div>
-
-                {posts.length === 0 && (
-                    <div className="text-center py-16">
-                        <div className="text-gray-400 text-lg mb-2">
-                            {isSearching ? '검색 결과가 없습니다' : '게시글이 없습니다'}
-                        </div>
-                        <p className="text-gray-500">
-                            {isSearching ? '다른 검색어를 시도해보세요' : '첫 번째 게시글을 작성해보세요!'}
-                        </p>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -40,7 +40,6 @@ export default function EditPost() {
     };
 
     const handleUpdatePost = async (data: PostData) => {
-        console.log("서버로 전송할 데이터:", data);
 
         try {
             await api.put(`/posts/${id}`, {

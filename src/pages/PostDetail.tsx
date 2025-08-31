@@ -9,6 +9,10 @@ import type {VoteOption} from "@/props/VoteOptionProps.tsx";
 import LazyYouTube from "@/components/common/LazyYoutube.tsx";
 import VoteChart from "@/components/vote/VoteCharts.tsx";
 import ShareButton from "@/components/common/ShareButton";
+import {useUser} from "@/store/UserContext.tsx";
+import { Button } from "@/components/ui/button";
+import {Clock} from "lucide-react";
+import {toast} from "sonner";
 
 interface PostDetailData {
     id: number;
@@ -17,6 +21,7 @@ interface PostDetailData {
     author: string;
     createdAt: string;
     videoId?: string;
+    categoryId?: number;
     voteOptionList: VoteOption[];
     voteEnabled: boolean;
     voteEndTime: string;
@@ -25,6 +30,10 @@ interface PostDetailData {
 export interface VoteCount { voteOptionId: number; count: number; }
 
 const PostDetail = () => {
+
+    const { user } = useUser();
+    const isAdmin = user?.role === 'ADMIN'; // 관리자 권한 체크
+
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [post, setPost] = useState<PostDetailData | null>(null);
@@ -38,7 +47,6 @@ const PostDetail = () => {
         setCountLoading(true);
         try {
             const { data } = await api.get(`votes/count/${id}`);
-            console.log(data);
             setCounts(Array.isArray(data) ? data : (data ? [data] : []));
         } finally {
             setCountLoading(false);
@@ -46,6 +54,22 @@ const PostDetail = () => {
     }, [id]);
 
     useEffect(() => { fetchVoteCount(); }, [fetchVoteCount]);
+
+    const handleExtendVote = async () => {
+        try {
+            await api.put(`/posts/${id}/extend-vote`);
+
+            toast.success('투표가 7일 연장되었습니다!');
+
+            // 데이터 다시 불러오기
+            const postResponse = await api.get(`posts/${id}`);
+            setPost(postResponse.data.data);
+
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (error) {
+            toast.error('투표 연장에 실패했습니다.');
+        }
+    };
 
     const handleVote = async (optionId: number | string) => {
         if (!post) return;
@@ -73,7 +97,6 @@ const PostDetail = () => {
                 setPost(postResponse.data.data);
 
                 const postsResponse = await api.get(`posts`);
-                console.log(postsResponse.data);
                 const filteredPosts = postsResponse.data.content.filter((postItem: { id: number; }) => postItem.id !== Number(id));
                 setPosts(filteredPosts);
 
@@ -110,6 +133,9 @@ const PostDetail = () => {
         return <div>게시글을 찾을 수 없습니다.</div>;
     }
 
+    const isVoteExpired = post && post.voteEndTime &&
+        new Date(post.voteEndTime) < new Date();
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* 메인 콘텐츠 */}
@@ -130,10 +156,27 @@ const PostDetail = () => {
                             loading={countLoading}
                         />
 
+                        {/* 투표 상태 & 관리자 액션 */}
+                        <div className="w-full mb-4 flex justify-between items-center">
+                            {/* ✅ 관리자만 볼 수 있는 연장 버튼 */}
+                            {isAdmin && isVoteExpired && (
+                                <Button
+                                    onClick={handleExtendVote}
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                >
+                                    <Clock className="h-4 w-4 mr-1" />
+                                    투표 연장
+                                </Button>
+                            )}
+                        </div>
+
                         {/* 투표 옵션 */}
                         <Vote
                             options={post.voteOptionList || []}
                             postId={post.id}
+                            categoryId={post.categoryId}
                             counts={counts}                 // ← 같은 데이터 공유
                             isEditing={false}
                             onVote={handleVote}
