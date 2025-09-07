@@ -5,7 +5,8 @@ import logo from "@/assets/logo.png";
 
 const Login = () => {
     const handleLogin = (provider: string) => {
-        window.location.href = `https://www.vstalk.com/oauth2/authorization/${provider}`;
+        console.log(import.meta.env.VITE_OAUTH_LOGIN_REDIRECT_URL);
+        window.location.href = `${import.meta.env.VITE_OAUTH_LOGIN_REDIRECT_URL}${provider}`;
     };
 
     return (

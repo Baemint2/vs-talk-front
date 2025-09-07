@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {useCallback, useEffect, useState} from "react";
 import Vote from "@/components/vote/Vote.tsx";
-import Comment from "@/pages/Comment.tsx";
+import CommentSection from "@/components/comments/CommentSection.tsx";
 import Post from "@/components/post/Post.tsx";
 import api from "@/api/axiosConfig.ts";
 import type {PostProps} from "@/props/PostProps.tsx";
@@ -196,7 +196,7 @@ const PostDetail = () => {
                     </div>
                 </div>
 
-                <Comment postId={post.id}/>
+                <CommentSection postId={post.id}/>
             </div>
 
             {/* 관련 게시글 */}

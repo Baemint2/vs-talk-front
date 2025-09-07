@@ -168,13 +168,7 @@ const Vote = ({ options: initialOptions, postId, categoryId, onVote, isEditing =
 
             {/* 퀴즈 섹션 */}
             {showQuiz && !isEditing && (
-                <div className="mt-8 animate-fade-in">
-                    <div className="text-lg font-semibold mb-4 text-center">
-                        📝 투표하신 주제에 대한 퀴즈가 있습니다!
-                    </div>
-                    {/* 퀴즈 컴포넌트 렌더링 */}
-                    <Quiz open={showQuiz} onOpenChange={setShowQuiz} categoryId={categoryId} />
-                </div>
+                <Quiz open={showQuiz} onOpenChange={setShowQuiz} categoryId={categoryId} />
             )}
 
             {/* 입력 검증 알림 다이얼로그 */}

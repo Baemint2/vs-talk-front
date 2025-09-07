@@ -12,6 +12,7 @@ import PostManage from "@/pages/admin/PostManage.tsx";
 import EditPost from "@/components/post/EditPost.tsx";
 import { Toaster } from 'sonner';
 import ExcelUpload from "@/components/post/ExcelUpload.tsx";
+import PrivacyPolicy from "@/components/PrivacyPolicy.tsx";
 
 const router = createBrowserRouter([
     {
@@ -57,8 +58,11 @@ const router = createBrowserRouter([
             {
                 path: 'login/admin',
                 element: <AdminLogin/>
+            },
+            {
+                path: 'privacy',
+                element: <PrivacyPolicy/>
             }
-            // 다른 라우트들...
         ]
     }
 ]);

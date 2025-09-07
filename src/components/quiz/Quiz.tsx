@@ -1,4 +1,3 @@
-
 import {useEffect, useState} from "react";
 import {
     Dialog,
@@ -24,6 +23,7 @@ interface QuizQuestion {
     id: number;
     question: string;
     options: QuizOption[];
+    title: string;
     explanation: string;
 }
 
@@ -35,10 +35,12 @@ interface QuizDialogProps {
 
 const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
     const [quiz, setQuiz] = useState<QuizQuestion | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [correct, setCorrect] = useState(false);
+    const [correctOptionId, setCorrectOptionId] = useState<number | null>(null);
 
     // 퀴즈 데이터 가져오기
     const fetchQuiz = async () => {
@@ -49,6 +51,12 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
             setError(null);
             console.log(categoryId)
             const response = await api.get(`/quizzes/post/${categoryId}`);
+
+            if (response.data.status === 'BAD_REQUEST') {
+                setError(response.data.data); // "해당 카테고리에 활성화된 퀴즈가 없습니다."
+                return;
+            }
+
             setQuiz(response.data.data);
         } catch (error) {
             console.error("퀴즈 가져오기 실패:", error);
@@ -69,6 +77,7 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
             setSelectedOption(null);
             setSubmitted(false);
             setError(null);
+            setCorrectOptionId(null);
         }
     }, [open, categoryId]);
 
@@ -81,6 +90,7 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
             setSelectedOption(null);
             setSubmitted(false);
             setError(null);
+            setCorrectOptionId(null);
         }
 
         onOpenChange(newOpen);
@@ -91,45 +101,43 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
         if (!selectedOption || !categoryId || !quiz) return;
 
         try {
-            await api.post(`/quizzes/answer`, {
+            const response = await api.post(`/quizzes/answer`, {
                 quizId: quiz.id,
                 optionId: selectedOption,
-                postId: categoryId
             });
 
             setSubmitted(true);
+            setCorrect(response.data.data.correct);
+            // 서버 응답에서 정답 ID를 받아서 저장
+            setCorrectOptionId(response.data.data.correctOptionId);
         } catch (error) {
             console.error("퀴즈 제출 실패:", error);
             setError("답변 제출 중 오류가 발생했습니다.");
         }
     };
 
-    // 선택한 옵션이 정답인지 확인
-    const isCorrect = () => {
-        if (!quiz || !selectedOption) return false;
-        const option = quiz.options.find(opt => opt.id === selectedOption);
-        return option?.isCorrect ?? false;
-    };
-
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="sm:max-w-md">
-                <DialogHeader>
+                { quiz ? <DialogHeader>
                     <DialogTitle className="text-xl flex items-center gap-2">
-                        🧠 투표 후 퀴즈
+                        {quiz?.title}
                     </DialogTitle>
                     <DialogDescription>
                         방금 투표하신 주제에 대한 퀴즈입니다. 정답을 맞혀보세요!
                     </DialogDescription>
-                </DialogHeader>
+                </DialogHeader> : null}
 
-                {loading ? (
-                    <div className="py-8 text-center">
-                        <div className="animate-pulse h-4 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
-                        <div className="animate-pulse h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                {error ? (
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                            아직 퀴즈가 준비되지 않았어요
+                        </h3>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                            이 주제에 대한 퀴즈를 준비 중입니다.<br/>
+                            다음에 다시 확인해주세요! 😊
+                        </p>
                     </div>
-                ) : error ? (
-                    <div className="py-6 text-center text-red-500">{error}</div>
                 ) : quiz ? (
                     <div className="py-4">
                         <h3 className="font-medium text-lg mb-4">{quiz.question}</h3>
@@ -143,9 +151,9 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
                                 <div
                                     key={option.id}
                                     className={`flex items-center space-x-2 p-3 rounded-lg border ${
-                                        submitted && option.isCorrect
+                                        submitted && correctOptionId === option.id
                                             ? "border-green-500 bg-green-50"
-                                            : submitted && selectedOption === option.id && !option.isCorrect
+                                            : submitted && selectedOption === option.id && correctOptionId !== option.id
                                                 ? "border-red-500 bg-red-50"
                                                 : "border-gray-200"
                                     }`}
@@ -160,10 +168,10 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
                                     >
                                         {option.optionText}
                                     </Label>
-                                    {submitted && option.isCorrect && (
+                                    {submitted && correctOptionId === option.id && (
                                         <Check className="text-green-500" size={18} />
                                     )}
-                                    {submitted && selectedOption === option.id && !option.isCorrect && (
+                                    {submitted && selectedOption === option.id && correctOptionId !== option.id && (
                                         <X className="text-red-500" size={18} />
                                     )}
                                 </div>
@@ -171,19 +179,15 @@ const Quiz = ({ open, onOpenChange, categoryId }: QuizDialogProps) => {
                         </RadioGroup>
 
                         {submitted && (
-                            <div className={`mt-4 p-4 rounded-lg ${isCorrect() ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+                            <div className={`mt-4 p-4 rounded-lg ${correct ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
                                 <p className="font-medium mb-2">
-                                    {isCorrect() ? "🎉 정답입니다!" : "😓 틀렸습니다."}
+                                    {correct ? "🎉 정답입니다!" : "😓 틀렸습니다."}
                                 </p>
                                 <p className="text-sm">{quiz.explanation}</p>
                             </div>
                         )}
                     </div>
-                ) : (
-                    <div className="py-6 text-center text-gray-500">
-                        이 게시물에 대한 퀴즈가 없습니다.
-                    </div>
-                )}
+                ) : null}
 
                 <DialogFooter className="flex sm:justify-between items-center">
                     {!submitted && quiz && (

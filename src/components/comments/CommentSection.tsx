@@ -21,7 +21,7 @@ interface CommentType {
   deleted: boolean;
 }
 
-const Comment = ({ postId }: CommentProps) => {
+const CommentSection = ({ postId }: CommentProps) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [inputValue, setInputValue] = useState('');
   const { user, isAuthenticated } = useUser();
@@ -183,4 +183,4 @@ const Comment = ({ postId }: CommentProps) => {
   );
 };
 
-export default Comment;
+export default CommentSection;
