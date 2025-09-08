@@ -15,13 +15,23 @@ const Footer = ({onMenuClick, role, isAuthenticated}: FooterProps) => {
         navigate('/post/add');
     }
 
+    const goHome = () => {
+        if (location.pathname === '/') {
+            // 현재 홈 페이지에 있다면 새로고침
+            window.scrollTo(0, 0);
+        } else {
+            // 다른 페이지에 있다면 홈으로 이동
+            navigate('/');
+        }
+    }
+
     return (
         <footer
             className="
             fixed bottom-0 w-full bg-gray-800 text-white
-            h-[calc(70px+env(safe-area-inset-bottom))]   // 높이를 더 크게 조정
-            pt-2                                         // 상단 패딩 증가
-            pb-[calc(8px+env(safe-area-inset-bottom))]   // 하단 여유 공간 추가
+            h-[calc(70px+env(safe-area-inset-bottom))]
+            pt-2
+            pb-[calc(8px+env(safe-area-inset-bottom))]
             supports-[padding:max(0px)]:pb-[max(8px,env(safe-area-inset-bottom))]
           "
         >
@@ -29,7 +39,7 @@ const Footer = ({onMenuClick, role, isAuthenticated}: FooterProps) => {
                 <span onClick={onMenuClick} className="cursor-pointer p-2">
                     <AlignJustify/>
                 </span>
-                <span className="cursor-pointer p-2">
+                <span className="cursor-pointer p-2" onClick={goHome}>
                     <House size={30}
                            onClick={() => navigate('/')}
                     />
